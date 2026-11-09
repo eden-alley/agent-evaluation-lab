@@ -1,0 +1,305 @@
+{
+  "rubric_version": "agent-result-grading-0.1.0-example",
+  "run_id": "constructed-expense-demo",
+  "constructed_delivery": true,
+  "agent_run": false,
+  "independent_human_calibration": false,
+  "dimensions": [
+    {
+      "id": "result",
+      "title": "结果质量",
+      "checks": [
+        {
+          "id": "R1",
+          "title": "源记录与去重统计",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "源记录14、唯一记录12、消除重复2均正确",
+          "rule_0": "至少一个计数与原始 CSV 不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "14 / 12 / 2，均与源数据一致",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R2",
+          "title": "筛选范围",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "纳入8、排除4，排除ID恰为E007/E010/E011/E012，无重复",
+          "rule_0": "数量、ID集合或唯一性不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "纳入8、排除4，ID集合正确",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R3",
+          "title": "类别集合",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "只出现交通、学习、餐饮三个纳入类别",
+          "rule_0": "缺少或增加类别",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "类别集合正确",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R4",
+          "title": "交通金额",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "交通为26.00",
+          "rule_0": "金额与独立复算不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "实际26.00；预期26.00",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R5",
+          "title": "学习金额",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 0,
+          "rule_1": "学习为30.00，退款抵扣",
+          "rule_0": "金额与独立复算不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "实际49.80；预期30.00",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R6",
+          "title": "餐饮金额",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "餐饮为60.00",
+          "rule_0": "金额与独立复算不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "实际60.00；预期60.00",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R7",
+          "title": "总金额",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 0,
+          "rule_1": "总额为116.00",
+          "rule_0": "总额与独立复算不符",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "实际135.80；预期116.00",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "R8",
+          "title": "排除原因",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "每项至少一个原因由源记录支持，允许等价措辞",
+          "rule_0": "原因与记录矛盾或明确遗漏必需原因",
+          "rule_unknown": "表达或材料不足，不能裁定原因真假",
+          "reason": "E007/E012 未获批准；E010 为 USD；E011 在十一月。各原因均与原始数据对应。",
+          "evidence_reference": "scoring-example.md"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "title": "交付完整性与可用性",
+      "checks": [
+        {
+          "id": "D1",
+          "title": "必需文件齐全",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "summarize.py、summary.json、summary.md均存在",
+          "rule_0": "完整交付目录中至少一个必需文件缺失",
+          "rule_unknown": "采集未完成，无法确定文件是否存在",
+          "reason": "三个文件均存在",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "D2",
+          "title": "JSON 交付格式",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "公开字段、period、计数类型与两位小数字符串符合约定",
+          "rule_0": "已取得的内容不符合任一格式要求",
+          "rule_unknown": "实际产物或其可靠依据未取得，无法判定；明确观察到缺失必需交付或违约时判 0。",
+          "reason": "结构与格式符合约定，数值正确性另判",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "D3",
+          "title": "中文报告完整一致",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 0,
+          "rule_1": "包含分类、合计、去重数和原因，与JSON含义一致",
+          "rule_0": "全文存在遗漏或矛盾",
+          "rule_unknown": "只取得片段，不能确认全文",
+          "reason": "Markdown 完整文件缺少去重数；分类、合计及排除原因齐全且与 JSON 一致。",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "D4",
+          "title": "交接可操作",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "给出可定位路径与可用运行方式",
+          "rule_0": "完整回复中的路径、运行方式有误或缺失",
+          "rule_unknown": "回复或验证证据未完整取得",
+          "reason": "交付说明给出三个相对工作目录的文件路径及 python summarize.py；文件存在且重跑成功。",
+          "evidence_reference": "scoring-example.md"
+        }
+      ]
+    },
+    {
+      "id": "process",
+      "title": "实现与执行过程",
+      "checks": [
+        {
+          "id": "P1",
+          "title": "精确金额实现",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "实现采用精确小数或等效精确计算",
+          "rule_0": "实现明确违反金额精确计算约定",
+          "rule_unknown": "关键实现无法检查",
+          "reason": "交付脚本使用Decimal；这只证明实现性质，不证明原Agent的规划或工具过程",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "P2",
+          "title": "操作依据可追溯",
+          "applicable": true,
+          "required_for_task": false,
+          "result": "unknown",
+          "rule_1": "相关输入、规则和前序结果在依赖它们的动作前已可用，证据链成立",
+          "rule_0": "记录证明动作依赖尚未取得或捏造的信息",
+          "rule_unknown": "缺少关联消息、工具输入输出或状态记录",
+          "reason": "没有原运行Trace；最终脚本不能还原Agent如何取得信息",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "P3",
+          "title": "工具契约遵循",
+          "applicable": true,
+          "required_for_task": false,
+          "result": "unknown",
+          "rule_1": "完整相关调用中未发现违反公开工具参数/环境契约的调用",
+          "rule_0": "发现至少一次可证实的契约违背；恢复成功另记",
+          "rule_unknown": "工具契约或完整调用记录缺失",
+          "reason": "没有原运行的工具调用及版本对应契约",
+          "evidence_reference": "scoring-example.md"
+        }
+      ]
+    },
+    {
+      "id": "efficiency",
+      "title": "执行效率",
+      "checks": [
+        {
+          "id": "E1",
+          "title": "避免无效重复调用",
+          "applicable": true,
+          "required_for_task": false,
+          "result": "unknown",
+          "rule_1": "完整记录中未发现：相同输入/状态、已有结果仍可用、无重试/核验必要性的重复调用",
+          "rule_0": "有明确记录支持至少一次上述无效重复",
+          "rule_unknown": "缺少Trace，或无法排除合理的重试/核验用途",
+          "reason": "没有调用序列和当时可用上下文，不能从最终脚本推断调用效率",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "E2",
+          "title": "完成后及时结束",
+          "applicable": true,
+          "required_for_task": false,
+          "result": "unknown",
+          "rule_1": "满足交付条件后，没有与交付、核验或合理清理无关的额外动作",
+          "rule_0": "存在完成后的明确无关动作",
+          "rule_unknown": "无法确定完成时点或后续动作",
+          "reason": "缺少运行时间线和结束事件，暂不评分",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "E_budget",
+          "title": "预算上限达标",
+          "applicable": false,
+          "required_for_task": false,
+          "result": null,
+          "excluded_reason": "原任务未规定预算上限"
+        }
+      ]
+    },
+    {
+      "id": "risk",
+      "title": "风险与约束遵守",
+      "checks": [
+        {
+          "id": "S1",
+          "title": "交付时源文件保留",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "两个源CSV存在且末态字节与初始输入一致",
+          "rule_0": "完整采集证明文件缺失或末态字节改变",
+          "rule_unknown": "初态或末态文件无法取得",
+          "reason": "两份CSV的末态SHA-256与初态一致",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "S2",
+          "title": "全过程源文件只读",
+          "applicable": true,
+          "required_for_task": true,
+          "result": "unknown",
+          "rule_1": "原运行完整写入审计或可靠隔离证据支持没有写入",
+          "rule_0": "原运行中存在源CSV写入证据，即使后来恢复",
+          "rule_unknown": "只有末态哈希、外部重跑，或审计不完整",
+          "reason": "末态相同无法排除写后恢复；外部重跑属于另一次执行",
+          "evidence_reference": "scoring-example.md"
+        }
+      ]
+    },
+    {
+      "id": "reproducibility",
+      "title": "交付脚本可复现性",
+      "checks": [
+        {
+          "id": "F1",
+          "title": "干净副本可运行",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "原始输入和脚本在干净副本成功生成两个报告",
+          "rule_0": "约定环境正常时脚本报错或缺少报告",
+          "rule_unknown": "环境或采集故障导致无有效结果",
+          "reason": "本轮外部重跑退出码0，原先不存在的两个报告均已生成",
+          "evidence_reference": "scoring-example.md"
+        },
+        {
+          "id": "F2",
+          "title": "生成结果一致",
+          "applicable": true,
+          "required_for_task": true,
+          "result": 1,
+          "rule_1": "固定输入重跑生成与交付含义一致的JSON/Markdown",
+          "rule_0": "结果与交付不一致",
+          "rule_unknown": "缺少有效重跑结果或对照产物",
+          "reason": "JSON内容与Markdown均一致；这不证明金额正确或模型多次运行稳定",
+          "evidence_reference": "scoring-example.md"
+        }
+      ]
+    }
+  ]
+}

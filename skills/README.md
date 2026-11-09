@@ -1,0 +1,38 @@
+# 共创 Skill
+
+本目录保存用户共同设计并确认同步的两份首版试用方法。
+
+| Skill | 方法版本 | 职责 |
+| --- | --- | --- |
+| [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.2 | 根据项目和需求筛选、适配评测案例，分别交付用户需求任务和能力专项 |
+| [结果判定与评分](agent-result-grading/SKILL.md) | 0.1.0 | 根据运行证据逐项判定，分别汇总多个维度与任务验收，交付问题线索 |
+
+原始正文保留其版本及试用状态；同步不代表方法已经完成真实运行验证或判定器校准。本次不新增问题分析 Skill，不接入真实执行器。
+
+## 两种表示
+
+- 各 Skill 子目录保存原始文件，文件字节与本次确认的来源包一致。评分 Skill 包含参考说明、示例 JSON、汇总脚本和客户端元数据。
+- `platform/*.json` 是现有 `POST /api/v1/skills/{id}/versions` 可接受的请求体。平台目前只保存单篇文本，因此合并正文与参考资料，并将相对链接改为文内锚点；评分示例与脚本以完整代码块收录。平台不会执行这些代码。
+- `catalog.json` 保存目录元数据、方法版本、每个原始文件的 SHA-256 和平台内容哈希。平台哈希采用 `backend/lab/quality_checks.py` 中 `digest({"content": text})` 的规范化算法，并非纯文本字节哈希。
+
+客户端只读取平台内容时，可将示例 JSON 与 Python 代码块保存为标示的相对路径，再执行正文命令。直接使用仓库文件时，从 `skills/agent-result-grading` 目录执行：
+
+```powershell
+python scripts/aggregate_scores.py references/example-checks.json
+```
+
+脚本只汇总已有标签，不检查原始运行，也不证明评分依据充分。
+
+## 同步到另一个本地实例
+
+数据库属于本机状态，不提交 Git。克隆仓库不会自动发布 Skill；有用户授权后，使用现有接口导入：
+
+1. 启动平台，用 `GET /api/v1/skills` 检查目录。按 `catalog.json` 中的名称匹配；有多个同名项时先确认目标，不自动选择。
+2. 没有对应目录时，将该项的 `catalog` 对象提交到 `POST /api/v1/skills`；已有目录则复用它的 ID。
+3. 对照已发布内容及哈希；内容完全一致时保留原版本。不同或尚未发布时，将对应 `payload_file` 的 JSON 提交到 `POST /api/v1/skills/{id}/versions`。
+4. 通过网页审阅发布，或在用户已授权发布的前提下调用 `POST /api/v1/skills/{id}/versions/{version_id}/publish`。
+5. 用 `GET /api/v1/skills/{id}/content` 回读，核对全文、哈希及发布状态，再用 MCP `list_skills` / `get_skill` 验证外部调用方可读取。
+
+方法版本（如 0.1.2）与平台递增版本号（如第 1 版）是不同字段。已有版本不可覆盖，新增版本不得修改历史产物所引用的旧版本。
+
+同步记录及验证边界见 [Skill 同步记录](../docs/SKILL_SYNC.md)。

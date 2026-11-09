@@ -1,0 +1,4 @@
+interface:
+  display_name: "结果判定与评分"
+  short_description: "按多维检查项核验 Agent 运行证据，分别评分并交接开发建议"
+  default_prompt: "请使用 $agent-result-grading，依据当前任务要求、产物和运行证据逐维评分，保留 unknown，并给出有依据的改进线索。"
