@@ -3,10 +3,10 @@
   "skills": [
     {
       "slug": "general-harness-evaluation",
-      "method_version": "0.1.2",
+      "method_version": "0.1.5",
       "catalog": {
         "name": "通用 Harness 评测",
-        "description": "依据具体 Agent/Harness 项目现状筛选与适配开源评测案例，分别交付用户需求任务与具体能力专项。共创方法 v0.1.2，适用于草案设计；不执行被测 Agent 或评分。",
+        "description": "为 Agent/Harness 按风险设计评测集，确定种子题、验收证据及覆盖缺口，经审阅冻结基线。共创方法 v0.1.5 草稿。",
         "kind": "evaluation",
         "tags": [
           "Harness",
@@ -17,12 +17,12 @@
         ]
       },
       "payload_file": "platform/general-harness-evaluation.json",
-      "platform_content_hash": "5ade7e9d7850df1d88f8b40601c2812bd72a9c81e1772bc5a2fe20a1b655d14a",
-      "characters": 11791,
+      "platform_content_hash": "80d9e4b2cd56808b66800aa1de6d11e97762fde6206b824694c7dfa09bf74987",
+      "characters": 9232,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "aff2f52986067e47fe73a8c69aa348fb852eb78534145dd59db2addc1997a15a"
+          "sha256": "31fe974a266d07b379079bcab54f263a26136ff872c9223d9112d35d6592df54"
         },
         {
           "path": "references/capability-candidates.md",
@@ -36,10 +36,10 @@
     },
     {
       "slug": "agent-result-grading",
-      "method_version": "0.1.0",
+      "method_version": "0.1.2",
       "catalog": {
         "name": "结果判定与评分",
-        "description": "对 Agent/Harness 的运行产物与可见过程进行多维判定，输出逐项证据、1/0/unknown、维度评分与任务验收。共创方法 v0.1.0；不执行被测 Agent，也不自动修改 Harness。",
+        "description": "对 Agent/Harness 的运行产物与可见过程进行多维判定，输出逐项证据、1/0/unknown、维度评分与任务验收。共创方法 v0.1.2 草稿。",
         "kind": "evaluation",
         "tags": [
           "Harness",
@@ -49,12 +49,12 @@
         ]
       },
       "payload_file": "platform/agent-result-grading.json",
-      "platform_content_hash": "31fad0fd37a7c1f432aaeea24df2efa9a3223c067e3d6c8cfe8aa516f8c9a137",
-      "characters": 23752,
+      "platform_content_hash": "71c7815df2510d627d0881bd242ff8b4f354fd3f15082559c09e9d0bed94f58e",
+      "characters": 24189,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "73343774fad0e00755307eff0e47ff0e75ad90bb935ea2ad3a5a6c92cc4f7d37"
+          "sha256": "b9a1126923fdde83d3bc5cc6b5a89f3cbc53dbc2932dbe87617ae8cf8941957b"
         },
         {
           "path": "references/dimensions-and-evidence.md",
