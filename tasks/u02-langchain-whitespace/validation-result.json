@@ -1,0 +1,65 @@
+{
+  "validated_on": "2026-11-12",
+  "skill_version": "0.1.6",
+  "platform": "Windows x64",
+  "python": "3.12.14",
+  "model_requests": 0,
+  "installation": "33 locked wheels, offline, hashes verified, pip check passed",
+  "manifest_sha256": "e70cbe0813a5587a7f604223467aeb3fe042d81ea432884d06d8556eb24180bb",
+  "environment_script_sha256": "4009482d2c350e47b5633b3ad28688116604ac54d6ba9f30a2fb8f2640e3f6c7",
+  "requirements_sha256": "406e7af1842f47d8d4b35481e4d6417777bf26cebaf9ec4961c299689b514106",
+  "controls": {
+    "original": {
+      "tests": 5,
+      "passed": 3,
+      "checks": {
+        "test_overlapping_merge": true,
+        "test_retains_whitespace_when_disabled": true,
+        "test_split_piece_at_limit": false,
+        "test_unsplittable_long_piece": false,
+        "test_whitespace_only": true
+      },
+      "success": false,
+      "public_exit": 1
+    },
+    "reference": {
+      "tests": 5,
+      "passed": 5,
+      "checks": {
+        "test_overlapping_merge": true,
+        "test_retains_whitespace_when_disabled": true,
+        "test_split_piece_at_limit": true,
+        "test_unsplittable_long_piece": true,
+        "test_whitespace_only": true
+      },
+      "success": true,
+      "public_exit": 0
+    },
+    "over_trim": {
+      "tests": 5,
+      "passed": 4,
+      "checks": {
+        "test_overlapping_merge": true,
+        "test_retains_whitespace_when_disabled": false,
+        "test_split_piece_at_limit": true,
+        "test_unsplittable_long_piece": true,
+        "test_whitespace_only": true
+      },
+      "success": false,
+      "public_exit": 0
+    }
+  },
+  "reset_matches_initial": true,
+  "initial_files_checked": 18,
+  "additional_checks": {
+    "windows_launcher_preserves_failure_exit": true,
+    "reference_automatic_acceptance": true,
+    "changed_existing_test_rejected": true,
+    "validation_failure_restores_workspace": true
+  },
+  "limits": [
+    "Windows x64 and Python 3.12 verified",
+    "Dependency installation used local cached wheels",
+    "Report-content review and OS access enforcement belong to the evaluator and execution host"
+  ]
+}

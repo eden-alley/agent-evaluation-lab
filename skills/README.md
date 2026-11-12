@@ -4,7 +4,7 @@
 
 | Skill | 方法版本 | 职责 |
 | --- | --- | --- |
-| [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
+| [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.6 草稿 | 从风险设计种子题、可执行环境和验收证据，验证后准备版本化基线 |
 | [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
 
 方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。

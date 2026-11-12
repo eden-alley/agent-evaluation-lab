@@ -1,0 +1,4 @@
+# Task hashes refer to exact source bytes across checkouts.
+* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Preserve upstream fixture whitespace, including the unchanged public test.
+seed/** whitespace=-blank-at-eof,cr-at-eol
