@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from . import agents, projects, quality_routes, skills, integration
+from . import agents, projects, quality_routes, skills, integration, evaluation_imports
 from .db import connect, initialize
 from .errors import error
 from .datasets import QualityError
@@ -54,6 +54,7 @@ def create_app(db_path=None):
     app.include_router(quality_routes.router)
     app.include_router(skills.router)
     app.include_router(integration.router)
+    app.include_router(evaluation_imports.router)
     return app
 
 app = create_app()
