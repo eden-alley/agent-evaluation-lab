@@ -15,14 +15,22 @@ export class ApiError extends Error {
 }
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
+  const isComparison = /^\/comparisons(?:[/?#]|$)/.test(path);
   try {
     response = await fetch(`/api/v1${path}`, {
       ...init,
       headers: { "Content-Type": "application/json", ...init?.headers },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(isComparison ? 90000 : 12000),
       cache: "no-store",
     });
-  } catch {
+  } catch (error) {
+    if (isComparison && error instanceof Error && error.name === "TimeoutError") {
+      throw new ApiError(
+        "等待超时，后端可能仍在处理。请先刷新清单，避免重复创建。",
+        0,
+        "API_TIMEOUT",
+      );
+    }
     throw new ApiError(
       "无法连接本地 API，请启动后端服务后重试。",
       0,

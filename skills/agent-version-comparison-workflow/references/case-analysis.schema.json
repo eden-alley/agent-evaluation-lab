@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "EvidenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "material_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+          "title": "Material Id",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "start_line": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "line_count": {
+          "default": 40,
+          "maximum": 200,
+          "minimum": 1,
+          "title": "Line Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "material_id",
+        "sha256"
+      ],
+      "title": "EvidenceReference",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "dimension": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Dimension",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "improved",
+            "regressed",
+            "mixed",
+            "unchanged",
+            "insufficient",
+            "not_covered"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Before"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After"
+        },
+        "reason": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "limits": {
+          "default": "",
+          "maxLength": 4000,
+          "title": "Limits",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceReference"
+          },
+          "maxItems": 8,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "dimension",
+        "title",
+        "outcome",
+        "reason"
+      ],
+      "title": "Observation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "revision": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "summary": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "maxItems": 24,
+      "minItems": 1,
+      "title": "Observations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "request_id",
+    "summary",
+    "observations"
+  ],
+  "title": "CaseAnalysisInput",
+  "type": "object"
+}

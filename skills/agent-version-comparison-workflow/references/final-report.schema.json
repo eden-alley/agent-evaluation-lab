@@ -1,0 +1,205 @@
+{
+  "$defs": {
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "improved",
+            "regressed",
+            "mixed",
+            "unchanged",
+            "insufficient",
+            "not_covered"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "explanation": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/ObservationReference"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "outcome",
+        "explanation",
+        "refs"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "ObservationReference": {
+      "additionalProperties": false,
+      "properties": {
+        "case_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+          "title": "Case Id",
+          "type": "string"
+        },
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+          "title": "Observation Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "case_id",
+        "observation_id"
+      ],
+      "title": "ObservationReference",
+      "type": "object"
+    },
+    "Recommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "phenomenon": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Phenomenon",
+          "type": "string"
+        },
+        "cause_status": {
+          "enum": [
+            "hypothesis",
+            "supported",
+            "unresolved"
+          ],
+          "title": "Cause Status",
+          "type": "string"
+        },
+        "cause": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Cause",
+          "type": "string"
+        },
+        "action": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Action",
+          "type": "string"
+        },
+        "priority_reason": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Priority Reason",
+          "type": "string"
+        },
+        "validation": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Validation",
+          "type": "string"
+        },
+        "success_signals": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Success Signals",
+          "type": "string"
+        },
+        "guardrails": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "title": "Guardrails",
+          "type": "string"
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/ObservationReference"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "phenomenon",
+        "cause_status",
+        "cause",
+        "action",
+        "priority_reason",
+        "validation",
+        "success_signals",
+        "guardrails",
+        "refs"
+      ],
+      "title": "Recommendation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "case_report_ids": {
+      "items": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$",
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Case Report Ids",
+      "type": "array"
+    },
+    "summary": {
+      "maxLength": 12000,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "maxItems": 100,
+      "title": "Findings",
+      "type": "array"
+    },
+    "recommendations": {
+      "items": {
+        "$ref": "#/$defs/Recommendation"
+      },
+      "maxItems": 30,
+      "minItems": 1,
+      "title": "Recommendations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "request_id",
+    "case_report_ids",
+    "summary",
+    "recommendations"
+  ],
+  "title": "FinalReportInput",
+  "type": "object"
+}

@@ -81,6 +81,50 @@
           "sha256": "c73e623ac34aac9347ca562c207d1ba6838b4ed36b7112357a9db37e0f9022b1"
         }
       ]
+    },
+    {
+      "slug": "agent-version-comparison-workflow",
+      "method_version": "0.1.1",
+      "catalog": {
+        "name": "Agent版本对比与开发方向",
+        "description": "外部Agent逐题分析已有运行，并核查已有机制、实际缺口和最小动作，提交带证据的开发建议。v0.1.1离线试用。",
+        "kind": "evaluation",
+        "tags": [
+          "版本对比",
+          "workflow",
+          "能力变化",
+          "开发方向"
+        ]
+      },
+      "payload_file": "platform/agent-version-comparison-workflow.json",
+      "platform_content_hash": "cfb6ed63391901ea333e46080a6bba2c6c10216943451fe05d89e000f8a04ae7",
+      "characters": 18446,
+      "source_files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "037d6ef0f0c6bc27002889e2a37a7d49070b68a8c63c5fca3f0fa665c4f50de1"
+        },
+        {
+          "path": "references/platform-protocol.md",
+          "sha256": "1b32c53a63f299ec79f694e85d5f93959baf7ef4af454a0e48c7baf99c4260ec"
+        },
+        {
+          "path": "references/engineering-retro.md",
+          "sha256": "dc2f28b6299a58a6dd70e8da23ed4d351acf6950c23fa27bd556e82f78b0d2e0"
+        },
+        {
+          "path": "references/u05-baseline-example.md",
+          "sha256": "812257bca0ccea6c45dd9c9d657ff3d11210c902f05f92eeb33a4bb39fe49b49"
+        },
+        {
+          "path": "references/case-analysis.schema.json",
+          "sha256": "63786d3c377b57b8a282c24dbdc7685e675171b9ed10d365e99025a4db3a4fd2"
+        },
+        {
+          "path": "references/final-report.schema.json",
+          "sha256": "52618464351ed01af9ec5fc273dca02f36326c523e2961c11fee434046ac7bd9"
+        }
+      ]
     }
   ]
 }

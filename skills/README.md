@@ -1,11 +1,12 @@
 # 共创 Skill
 
-本目录保存两份共创方法的源码与平台导入文件。
+本目录保存共创方法与外部分析 workflow 的源码和平台导入文件。
 
 | Skill | 方法版本 | 职责 |
 | --- | --- | --- |
 | [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
 | [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
+| [Agent 版本对比 workflow](agent-version-comparison-workflow/SKILL.md) | 0.1.1 离线试用 | 外部 Agent 逐题分析，核查已有机制、实际缺口和最小动作，提出有证据及验证方式的开发建议 |
 
 方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
 
@@ -36,3 +37,5 @@ python scripts/aggregate_scores.py references/example-checks.json
 方法版本（如 0.1.2）与平台递增版本号（如第 1 版）是不同字段。已有版本不可覆盖，新增版本不得修改历史产物所引用的旧版本。
 
 同步记录及验证边界见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
+
+版本对比的完整接入流程、材料与报告合同及 U05 离线演示见 [对比 workflow 说明](../docs/COMPARISON_WORKFLOW.md)。它不改变已有两份方法或平台评分逻辑。

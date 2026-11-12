@@ -12,6 +12,7 @@ from .datasets import QualityError
 from .request_limits import RequestSizeLimit
 from .rechecking import routes as rechecking
 from .rechecking.sandbox import NativeExecutor
+from . import comparisons
 from fastapi.responses import JSONResponse
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -38,7 +39,7 @@ def create_app(db_path=None):
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
-        if "dataset" in request.url.path or "skills" in request.url.path:
+        if "dataset" in request.url.path or "skills" in request.url.path or "comparisons" in request.url.path:
             return JSONResponse({"error": {"code": "INVALID_REQUEST", "message": "提交内容有误，请检查字段、编号与引用。",
                 "details": [{"field": ".".join(map(str, e["loc"][1:])), "message": e["msg"]} for e in exc.errors()]}}, status_code=422)
         return error("INVALID_REQUEST", "输入有误，请检查必填项、路径格式和配置；配置中不能保存凭据。", 422)
@@ -72,6 +73,7 @@ def create_app(db_path=None):
     app.include_router(evaluation_imports.router)
     app.include_router(judging.router)
     app.include_router(rechecking.router)
+    app.include_router(comparisons.router)
     return app
 
 app = create_app()

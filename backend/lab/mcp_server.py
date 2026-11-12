@@ -201,5 +201,9 @@ def excerpt_evidence(body, start_line, line_count):
             "content": "\n".join(lines[start - 1:start - 1 + count])}
 
 
+from .comparisons.mcp import register as register_comparison_tools
+register_comparison_tools(server, call, READ, WRITE)
+
+
 def main():
     server.run(transport="stdio")

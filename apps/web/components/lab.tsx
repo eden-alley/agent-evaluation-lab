@@ -23,6 +23,7 @@ import { Skills } from "./skills";
 import { Connections } from "./connections";
 import { DatasetWorkspace } from "./dataset-workspace";
 import { ImportedRuns } from "./imported-runs";
+import { ComparisonWorkspace } from "./comparison-workspace";
 
 const nav = [
   ["projects", "项目", FolderKanban],
@@ -121,6 +122,8 @@ export function Lab({ page, id }: { page: string; id?: string }) {
             <DatasetWorkspace />
           ) : !example && (page === "evaluations" || page === "run") ? (
             <ImportedRuns id={page === "run" ? id : undefined} />
+          ) : page === "comparison" && !example ? (
+            <ComparisonWorkspace />
           ) : !example ? (
             <EmptyPage page={page} />
           ) : page === "datasets" ? (

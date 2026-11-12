@@ -16,7 +16,9 @@ TOOLS = ["get_platform_status", "list_projects", "get_project_context", "list_sk
          "get_submission_contract", "list_dataset_drafts", "submit_dataset_draft", "get_dataset_draft",
          "submit_quality_report", "get_quality_report", "list_dataset_versions", "get_dataset_version",
          "list_evaluation_runs", "get_evaluation_run", "start_judgment", "get_judgment",
-         "get_evaluation_evidence"]
+         "get_evaluation_evidence", "get_comparison_contract", "list_comparisons", "create_comparison",
+         "get_comparison", "get_comparison_case", "read_comparison_material",
+         "submit_comparison_case", "submit_comparison_report"]
 router = APIRouter(prefix="/api/v1")
 
 
