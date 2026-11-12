@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Database, ArrowUpRight } from "lucide-react";
 import { api } from "../lib/api";
 import { qualityApi } from "../lib/quality-api";
@@ -12,6 +12,8 @@ import type {
 } from "../lib/quality-types";
 import { Header, Tabs } from "./report-ui";
 import { QualityDetail } from "./quality-detail";
+import { CaseCatalog } from "./case-catalog";
+import { catalogEntries, latestDatasetDrafts } from "../lib/case-catalog";
 
 export function DatasetWorkspace() {
   const [projects, setProjects] = useState<Project[]>([]),
@@ -25,8 +27,15 @@ export function DatasetWorkspace() {
     try {
       const rows = (await api.projects()).items;
       setProjects(rows);
+      const requestedProject = new URLSearchParams(window.location.search).get(
+        "project",
+      );
       setProjectId((old) =>
-        rows.some((p) => p.id === old) ? old : rows[0]?.id || "",
+        rows.some((p) => p.id === old)
+          ? old
+          : rows.find((p) => p.id === requestedProject)?.id ||
+            rows[0]?.id ||
+            "",
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "读取项目失败");
@@ -111,30 +120,83 @@ function ProjectDatasets({
   const [drafts, setDrafts] = useState<DraftSummary[]>([]),
     [versions, setVersions] = useState<VersionSummary[]>([]),
     [tab, setTab] = useState("待审草案");
+  const [view, setView] = useState("评测题库"),
+    [catalogDrafts, setCatalogDrafts] = useState<DatasetDraft[]>([]),
+    [selectedDraftId, setSelectedDraftId] = useState(""),
+    [catalogError, setCatalogError] = useState("");
   const [draft, setDraft] = useState<DatasetDraft | null>(null),
     [version, setVersion] = useState<DatasetVersion | undefined>();
   const [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [detailLoading, setDetailLoading] = useState(false);
-  const epoch = useRef(0);
+  const epoch = useRef(0),
+    loadEpoch = useRef(0);
+  const activeDraft =
+    catalogDrafts.find((d) => d.id === selectedDraftId) || catalogDrafts[0];
+  const entries = useMemo(
+    () => catalogEntries(activeDraft ? [activeDraft] : []),
+    [activeDraft],
+  );
+  function selectDataset(id: string) {
+    setSelectedDraftId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("project", projectId);
+    url.searchParams.set("draft", id);
+    window.history.replaceState(null, "", url);
+  }
   async function load() {
+    const request = ++loadEpoch.current;
     setLoading(true);
     setError("");
+    setCatalogError("");
     try {
       const [a, b] = await Promise.all([
         qualityApi.drafts(projectId),
         qualityApi.versions(projectId),
       ]);
+      if (request !== loadEpoch.current) return;
       setDrafts(a.items);
       setVersions(b.items);
+      // The library shows the newest immutable draft of each dataset. Older
+      // submissions and fixed versions remain available in the review view.
+      const details = await Promise.allSettled(
+        latestDatasetDrafts(a.items).map((d) => qualityApi.draft(d.id)),
+      );
+      if (request !== loadEpoch.current) return;
+      if (details.some((result) => result.status === "rejected")) {
+        setCatalogDrafts([]);
+        setCatalogError("部分题目读取失败，请重试。草案与版本仍可单独查看。");
+      } else {
+        const loaded = details
+          .flatMap((result) =>
+            result.status === "fulfilled" ? [result.value] : [],
+          )
+          .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+        const requestedDraft = new URLSearchParams(window.location.search).get(
+          "draft",
+        );
+        setCatalogDrafts(loaded);
+        setSelectedDraftId(
+          (old) =>
+            loaded.find((d) => d.id === old)?.id ||
+            loaded.find((d) => d.id === requestedDraft)?.id ||
+            loaded[0]?.id ||
+            "",
+        );
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "读取失败");
+      if (request === loadEpoch.current)
+        setError(e instanceof Error ? e.message : "读取失败");
     } finally {
-      setLoading(false);
+      if (request === loadEpoch.current) setLoading(false);
     }
   }
   useEffect(() => {
     void load();
+    return () => {
+      loadEpoch.current++;
+      epoch.current++;
+    };
   }, []);
   async function open(id: string, isVersion = false) {
     const request = ++epoch.current;
@@ -189,133 +251,189 @@ function ProjectDatasets({
       if (request === epoch.current) setDetailLoading(false);
     }
   }
-  if (draft)
-    return (
-      <QualityDetail
-        key={draft.id + (version?.id || "")}
-        draft={draft}
-        version={version}
-        onBusy={onBusy}
-        onBack={() => {
-          setDraft(null);
-          setVersion(undefined);
-          void load();
-        }}
-        onChange={(next) => {
-          setDraft(next);
-          void load();
-        }}
-      />
-    );
   return (
     <>
-      <Header
-        title="数据集"
-        desc="从外部 Agent 交付的草案开始，检查质量证据，再确认固定版本。"
-        action={
-          <a className="button primary" href="/settings">
-            连接 Coding Agent <ArrowUpRight size={15} />
-          </a>
-        }
-      />
-      {error && (
-        <div role="alert" className="error section-bottom">
-          {error}
-          <button className="button small" onClick={load}>
-            重试
-          </button>
-        </div>
-      )}
-      <div className="metrics">
-        <div className="metric">
-          <span>等待审阅</span>
-          <strong>{drafts.filter((d) => d.status === "pending").length}</strong>
-        </div>
-        <div className="metric">
-          <span>已确认版本</span>
-          <strong>{versions.length}</strong>
-        </div>
-        <div className="metric">
-          <span>草案交付总数</span>
-          <strong>{drafts.length}</strong>
-        </div>
-      </div>
-      <div className="panel">
-        <div className="panel-head">
-          <div>
-            <h2>交付与版本</h2>
-            <p>真实工作区数据 · 来源与内容哈希随版本保存</p>
-          </div>
-          <button
-            className="button small"
-            disabled={loading || detailLoading}
-            onClick={load}
-          >
-            刷新
-          </button>
-        </div>
-        <Tabs
-          labels={["待审草案", "全部草案", "固定版本"]}
-          active={tab}
-          set={setTab}
+      {draft && (
+        <QualityDetail
+          key={draft.id + (version?.id || "")}
+          draft={draft}
+          version={version}
+          onBusy={onBusy}
+          onBack={() => {
+            setDraft(null);
+            setVersion(undefined);
+            void load();
+          }}
+          onChange={(next) => {
+            setDraft(next);
+            void load();
+          }}
         />
-        {loading || detailLoading ? (
-          <p role="status" className="pad muted">
-            {detailLoading ? "正在读取详情…" : "正在加载…"}
-          </p>
-        ) : tab === "固定版本" ? (
-          versions.length ? (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>数据集</th>
-                    <th>版本</th>
-                    <th>用例数</th>
-                    <th>确认时间</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {versions.map((v) => (
-                    <tr key={v.id}>
-                      <td>{v.name}</td>
-                      <td>v{v.version}</td>
-                      <td>{v.case_count}</td>
-                      <td className="small muted">
-                        {new Date(v.created_at).toLocaleString("zh-CN")}
-                      </td>
-                      <td>
-                        <button
-                          className="button small"
-                          onClick={() => open(v.id, true)}
-                        >
-                          查看固定版本
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty">
-              <h2>尚无确认版本</h2>
-              <p>审阅草案和质量报告后，可将其确认为固定版本。</p>
-            </div>
-          )
-        ) : (
-          <DraftTable
-            items={drafts.filter(
-              (d) => tab === "全部草案" || d.status === "pending",
-            )}
-            open={open}
+      )}
+      <div hidden={!!draft}>
+        <Header
+          title="数据集"
+          desc="选择一套评测，查看任务和验收标准。"
+          action={
+            <button
+              className="button small"
+              disabled={loading || detailLoading}
+              onClick={load}
+            >
+              刷新
+            </button>
+          }
+        />
+        <div className="run-tabs">
+          <Tabs
+            labels={["评测题库", "草案与版本"]}
+            active={view}
+            set={setView}
           />
+        </div>
+        {error && (
+          <div role="alert" className="error section-bottom">
+            {error}
+            <button className="button small" onClick={load}>
+              重试
+            </button>
+          </div>
         )}
+        <div hidden={view !== "评测题库"}>
+          {loading && (
+            <p role="status" className="pad muted">
+              正在读取题目…
+            </p>
+          )}
+          {!loading && catalogError && (
+            <div className="error" role="alert">
+              {catalogError}
+              <button className="button small" onClick={load}>
+                重试
+              </button>
+            </div>
+          )}
+          <div hidden={loading || !!catalogError}>
+            {activeDraft && (
+              <div className="project-context">
+                <label htmlFor="active-dataset">评测集</label>
+                <select
+                  id="active-dataset"
+                  className="input"
+                  value={activeDraft.id}
+                  onChange={(e) => selectDataset(e.target.value)}
+                >
+                  {catalogDrafts.map((d) => (
+                    <option value={d.id} key={d.id}>
+                      {d.payload.name} · {d.payload.cases.length} 题
+                    </option>
+                  ))}
+                </select>
+                <span className="small muted">
+                  {activeDraft.status === "approved"
+                    ? "已确认"
+                    : activeDraft.status === "rejected"
+                      ? "已退回"
+                      : "待审阅"}
+                </span>
+              </div>
+            )}
+            <CaseCatalog
+              key={activeDraft?.id}
+              entries={entries}
+              overview={
+                entries.some((entry) => entry.presentation.readiness)
+                  ? activeDraft?.payload.task_description
+                  : undefined
+              }
+              onReport={open}
+            />
+          </div>
+          {detailLoading && (
+            <p role="status" className="pad muted">
+              正在读取质量报告…
+            </p>
+          )}
+        </div>
+        <div hidden={view !== "草案与版本"}>
+          <div className="panel">
+            <div className="panel-head">
+              <div>
+                <h2>交付与版本</h2>
+                <p>真实工作区数据 · 来源与内容哈希随版本保存</p>
+              </div>
+              <button
+                className="button small"
+                disabled={loading || detailLoading}
+                onClick={load}
+              >
+                刷新
+              </button>
+            </div>
+            <Tabs
+              labels={["待审草案", "全部草案", "固定版本"]}
+              active={tab}
+              set={setTab}
+            />
+            {loading || detailLoading ? (
+              <p role="status" className="pad muted">
+                {detailLoading ? "正在读取详情…" : "正在加载…"}
+              </p>
+            ) : tab === "固定版本" ? (
+              versions.length ? (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>数据集</th>
+                        <th>版本</th>
+                        <th>用例数</th>
+                        <th>确认时间</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {versions.map((v) => (
+                        <tr key={v.id}>
+                          <td>{v.name}</td>
+                          <td>v{v.version}</td>
+                          <td>{v.case_count}</td>
+                          <td className="small muted">
+                            {new Date(v.created_at).toLocaleString("zh-CN")}
+                          </td>
+                          <td>
+                            <button
+                              className="button small"
+                              onClick={() => open(v.id, true)}
+                            >
+                              查看固定版本
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="empty">
+                  <h2>尚无确认版本</h2>
+                  <p>审阅草案和质量报告后，可将其确认为固定版本。</p>
+                </div>
+              )
+            ) : (
+              <DraftTable
+                items={drafts.filter(
+                  (d) => tab === "全部草案" || d.status === "pending",
+                )}
+                open={open}
+              />
+            )}
+          </div>
+          <p className="small muted section-note">
+            评测执行器尚未接入。此处确认的是评测集版本，不是被测智能体的评测成绩。
+          </p>
+        </div>
       </div>
-      <p className="small muted section-note">
-        评测执行器尚未接入。此处确认的是评测集版本，不是被测智能体的评测成绩。
-      </p>
     </>
   );
 }
