@@ -1,0 +1,58 @@
+{
+  "source_kind": "recorded_real_run",
+  "platform_run_id": "harness-step30-bailian-20261110",
+  "case_id": "U03",
+  "execution_run_id": "4886c177f724415c84ce2f5c57f8fa40",
+  "model_requests": 60,
+  "primary_source_hashes": {
+    "paid-run/U03/events.jsonl": "6187b20685c91d734e81537f702cbaae35de6b7811900e8c43a609cd69fecd71",
+    "paid-run/U03/grade/grade.json": "cde18890b22c3c5e95cc1f4ac0832705337e32092d1d9a4ddca4e556d998239a",
+    "paid-run/U03/grade/test-results.json": "5d11109cf4adc137ff519bd734d36c4d10403f953de5d05ce50bfd1679bac94c",
+    "observed-milestones.json": "ca07083465615831cbd3015e1eadf43e8d75c82cf9c9d11b6b1700b065f3e72d"
+  },
+  "selected_events": {
+    "159": {
+      "event_id": 159,
+      "type": "tool_result",
+      "tool": "run_shell",
+      "stop_reason": null,
+      "excerpt": "[exit 0]\nAssertionError: 'waiting_input' != 'failed'\nRan 1 test in 0.203s\nFAILED (failures=1)",
+      "excerpt_is_partial": true,
+      "model_responses_so_far": 48
+    },
+    "197": {
+      "event_id": 197,
+      "type": "tool_result",
+      "tool": "read_file",
+      "stop_reason": null,
+      "excerpt": "﻿        }\n        try:\n            transitioned = await store.transition_turn(\n                turn_id,\n                \"failed\",\n                expected_status=str(turn[\"status\"]),\n                fencing_token=int(tu",
+      "excerpt_is_partial": true
+    },
+    "198": {
+      "event_id": 198,
+      "type": "final_response",
+      "tool": null,
+      "stop_reason": "max_steps",
+      "excerpt": "（达到最大步数，已停止）",
+      "excerpt_is_partial": true
+    }
+  },
+  "business_file": {
+    "path": "deeptutor/app/service.py",
+    "initial_sha256": "cea936db919d325fd545e2f42cea6af50b3bb5548ac62057276b353d9ffea981",
+    "final_sha256": "cea936db919d325fd545e2f42cea6af50b3bb5548ac62057276b353d9ffea981"
+  },
+  "report_present": false,
+  "final_changes": [
+    ".tmp_a.py"
+  ],
+  "independent_tests": {
+    "total": 4,
+    "failures": 2,
+    "failed_checks": [
+      "test_missing_worker_unblocks_same_session",
+      "test_terminal_events_are_once_and_client_visible"
+    ]
+  },
+  "scope": "Selected excerpts and fingerprints for retrospective review; complete trace remains in the original archive."
+}

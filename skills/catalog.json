@@ -77,6 +77,38 @@
           "sha256": "d913504a75050ac416005410a8cf2416c5c4035d74d09efd6ac399fc4ec13204"
         }
       ]
+    },
+    {
+      "slug": "agent-run-retrospective",
+      "method_version": "0.1.0",
+      "catalog": {
+        "name": "运行复盘与改进候选",
+        "description": "依据 Agent/Harness 真实运行证据定位停留阶段，提出工具、检查和信息获取的改进候选及验证设计。v0.1.0 草稿。",
+        "kind": "evaluation",
+        "tags": [
+          "Harness",
+          "运行复盘",
+          "开发建议",
+          "证据"
+        ]
+      },
+      "payload_file": "platform/agent-run-retrospective.json",
+      "platform_content_hash": "3b6ce555cd690f8e1ac2c83ace32eb69ef7386138e355fb6dfb7cf1910091561",
+      "characters": 5609,
+      "source_files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e250a01a4dbe9d0eff1f3c014e1ea5166ea3dde7ace07de5b23fb85ef31e0bd7"
+        },
+        {
+          "path": "references/u03-retrospective.md",
+          "sha256": "cc81277e657d3f63fc873f19d11e869ce6d9148e566e1cce416f9865d2404350"
+        },
+        {
+          "path": "references/u03-evidence.json",
+          "sha256": "9e4fa33bf57b512e1e1b86ba1edba28f09ec29542ebbb0d8ecfd3b5e3b06344f"
+        }
+      ]
     }
   ]
 }
