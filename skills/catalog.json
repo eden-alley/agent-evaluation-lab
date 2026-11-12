@@ -3,10 +3,10 @@
   "skills": [
     {
       "slug": "general-harness-evaluation",
-      "method_version": "0.1.2",
+      "method_version": "0.1.5",
       "catalog": {
         "name": "通用 Harness 评测",
-        "description": "依据具体 Agent/Harness 项目现状筛选与适配开源评测案例，分别交付用户需求任务与具体能力专项。共创方法 v0.1.2，适用于草案设计；不执行被测 Agent 或评分。",
+        "description": "为 Agent/Harness 按风险设计评测集，确定种子题、验收证据及覆盖缺口，经审阅冻结基线。共创方法 v0.1.5 草稿。",
         "kind": "evaluation",
         "tags": [
           "Harness",
@@ -17,12 +17,12 @@
         ]
       },
       "payload_file": "platform/general-harness-evaluation.json",
-      "platform_content_hash": "5ade7e9d7850df1d88f8b40601c2812bd72a9c81e1772bc5a2fe20a1b655d14a",
-      "characters": 11791,
+      "platform_content_hash": "80d9e4b2cd56808b66800aa1de6d11e97762fde6206b824694c7dfa09bf74987",
+      "characters": 9232,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "aff2f52986067e47fe73a8c69aa348fb852eb78534145dd59db2addc1997a15a"
+          "sha256": "31fe974a266d07b379079bcab54f263a26136ff872c9223d9112d35d6592df54"
         },
         {
           "path": "references/capability-candidates.md",
@@ -36,10 +36,10 @@
     },
     {
       "slug": "agent-result-grading",
-      "method_version": "0.1.0",
+      "method_version": "0.2.1",
       "catalog": {
         "name": "结果判定与评分",
-        "description": "对 Agent/Harness 的运行产物与可见过程进行多维判定，输出逐项证据、1/0/unknown、维度评分与任务验收。共创方法 v0.1.0；不执行被测 Agent，也不自动修改 Harness。",
+        "description": "内置Judge按固定判据和运行证据逐项评分，保留原判、建议、生效值、复核状态与证据。共创方法v0.2.1，支持真实归档整理和离线模拟。",
         "kind": "evaluation",
         "tags": [
           "Harness",
@@ -49,12 +49,12 @@
         ]
       },
       "payload_file": "platform/agent-result-grading.json",
-      "platform_content_hash": "31fad0fd37a7c1f432aaeea24df2efa9a3223c067e3d6c8cfe8aa516f8c9a137",
-      "characters": 23752,
+      "platform_content_hash": "1f0b2d67295926a0ab9db727ccd4349e1f8053e29516a8ed4dd7b792c51146a0",
+      "characters": 26562,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "73343774fad0e00755307eff0e47ff0e75ad90bb935ea2ad3a5a6c92cc4f7d37"
+          "sha256": "f51b5607ffa74187d5848f0e699047051d4e53420326bffad7b0cd34ab8412ee"
         },
         {
           "path": "references/dimensions-and-evidence.md",
@@ -75,6 +75,10 @@
         {
           "path": "agents/openai.yaml",
           "sha256": "d913504a75050ac416005410a8cf2416c5c4035d74d09efd6ac399fc4ec13204"
+        },
+        {
+          "path": "references/judge-routing-and-records.md",
+          "sha256": "c73e623ac34aac9347ca562c207d1ba6838b4ed36b7112357a9db37e0f9022b1"
         }
       ]
     }

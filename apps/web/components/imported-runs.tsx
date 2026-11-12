@@ -10,6 +10,7 @@ import type {
 import { Header, Badge, Tabs } from "./report-ui";
 import { runCasePresentation } from "../lib/run-case-introductions";
 import { TraceNarrative } from "./trace-narrative";
+import { CurrentCapability } from "./current-capability";
 
 export function ImportedRuns({ id }: { id?: string }) {
   const [runs, setRuns] = useState<ImportedRun[]>([]),
@@ -126,7 +127,7 @@ function ImportedRunDetail({ run }: { run: ImportedRun }) {
   const [selected, setSelected] = useState(""),
     [filter, setFilter] = useState("全部"),
     [query, setQuery] = useState("");
-  const [view, setView] = useState("逐题结果");
+  const [view, setView] = useState("当前能力");
   const datasetQuery = new URLSearchParams({
     project: run.project_id,
     draft: run.dataset.draft_id,
@@ -212,11 +213,13 @@ function ImportedRunDetail({ run }: { run: ImportedRun }) {
       ) : (
         <>
           <Tabs
-            labels={["逐题结果", "总报告与原始记录"]}
+            labels={["当前能力", "逐题结果", "总报告与原始记录"]}
             active={view}
             set={setView}
           />
-          {view === "总报告与原始记录" ? (
+          {view === "当前能力" ? (
+            <CurrentCapability run={run} onChoose={choose} />
+          ) : view === "总报告与原始记录" ? (
             <ArtifactViewer
               runId={run.id}
               files={run.files}
@@ -334,6 +337,7 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
           )}
         </div>
       )}
+      <CurrentCapability run={run} caseId={item.id} />
       <Tabs
         labels={[
           "本题结果",
@@ -346,7 +350,7 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
       />
       {tab === "本题结果" ? (
         <div className="panel pad">
-          <h2>本题结果</h2>
+          <h2>归档原结果</h2>
           <Badge value={item.core_acceptance} />
           {finding && <p>{finding}</p>}
           {recovery && (

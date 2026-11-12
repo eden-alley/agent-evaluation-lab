@@ -1,10 +1,11 @@
 """FastAPI application configuration and error handling."""
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from . import agents, projects, quality_routes, skills, integration, evaluation_imports
+from . import agents, projects, quality_routes, skills, integration, evaluation_imports, judging
 from .db import connect, initialize
 from .errors import error
 from .datasets import QualityError
@@ -16,7 +17,15 @@ ROOT = Path(__file__).resolve().parents[2]
 def create_app(db_path=None):
     path = Path(db_path or os.environ.get("LAB_DB_PATH") or ROOT / "data" / "lab.sqlite3")
     initialize(path)
-    app = FastAPI(title="Agent Evaluation Lab", docs_url=None, redoc_url=None)
+    @asynccontextmanager
+    async def lifespan(app):
+        with connect(path) as conn:
+            conn.execute("""UPDATE judgments SET status='failed',
+                error='{"code":"JUDGE_INTERRUPTED","message":"服务重启中断了评审，请使用新的请求编号重试。"}'
+                WHERE status IN ('queued','running')""")
+        yield
+
+    app = FastAPI(title="Agent Evaluation Lab", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.db_path = path
     app.add_middleware(RequestSizeLimit)
     app.add_middleware(integration.ToolTraffic, db_path=path)
@@ -55,6 +64,7 @@ def create_app(db_path=None):
     app.include_router(skills.router)
     app.include_router(integration.router)
     app.include_router(evaluation_imports.router)
+    app.include_router(judging.router)
     return app
 
 app = create_app()

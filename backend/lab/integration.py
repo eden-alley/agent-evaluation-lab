@@ -14,7 +14,9 @@ from .quality_schemas import submission_contract
 
 TOOLS = ["get_platform_status", "list_projects", "get_project_context", "list_skills", "get_skill",
          "get_submission_contract", "list_dataset_drafts", "submit_dataset_draft", "get_dataset_draft",
-         "submit_quality_report", "get_quality_report", "list_dataset_versions", "get_dataset_version"]
+         "submit_quality_report", "get_quality_report", "list_dataset_versions", "get_dataset_version",
+         "list_evaluation_runs", "get_evaluation_run", "start_judgment", "get_judgment",
+         "get_evaluation_evidence"]
 router = APIRouter(prefix="/api/v1")
 
 

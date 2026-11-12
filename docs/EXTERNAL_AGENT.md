@@ -1,5 +1,7 @@
 # 外部 Coding Agent 接入与质量报告交接
 
+2026-11-12 评分接入已交付。Coding Agent 通过 list_evaluation_runs 发现运行，get_evaluation_run 确认实际案例范围，用 get_skill 固定已发布评分版本，再调用 start_judgment。get_judgment 默认返回概要，指定 case_id 后读取逐项判定与证据引用；get_evaluation_evidence 按行读取清单内原件。当前 archive 与 mock 均为离线模式，模型请求为0。人工终判入口位于网页，本机用户追加理由和决定后保留审计记录。工程依据见 JUDGE_EVIDENCE.md。
+
 本增量依据 2026-11-06 用户纠正与实施授权：用户在外部 Coding Agent 中工作，由它调用平台。用户进一步澄清“不要写 Skill”指具体方法内容必须共同设计；内置 Skill 是平台核心，必须支持按需使用并根据需求生成评测集。本增量实现目录、版本草稿、人工发布、按需发现与产物绑定，不代写任何正式 Skill 方法或业务指令。调用方向替代旧技术设计中的“平台启动 Codex”。既有 Python Agent 注册仍指向被测对象。
 
 ## 范围与责任

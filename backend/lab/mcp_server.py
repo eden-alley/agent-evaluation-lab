@@ -8,6 +8,7 @@ from mcp.types import CallToolResult, TextContent, ToolAnnotations
 
 from .quality_checks import canonical
 from .quality_schemas import DraftInput, ReportInput
+from .judge_contracts import JudgeRequest
 
 
 def api_url():
@@ -23,13 +24,15 @@ def result(body, is_error=False):
     return CallToolResult(content=[TextContent(type="text", text=canonical(body))], structuredContent=body, isError=is_error)
 
 
-async def call(tool, method, path, payload=None):
+async def call(tool, method, path, payload=None, projection=None):
     try:
         base = api_url()
         headers = {"X-Lab-Tool": tool, "X-Lab-Client": quote(os.environ.get("LAB_CLIENT_NAME", "external-coding-agent"), safe="")}
         async with httpx.AsyncClient(base_url=base, timeout=20, trust_env=False, follow_redirects=False) as client:
             response = await client.request(method, "/api/v1" + path, json=payload, headers=headers)
         body = response.json()
+        if response.is_success and projection:
+            body = projection(body)
         return result(body, not response.is_success)
     except (httpx.HTTPError, ValueError):
         return result({"error": {"code": "PLATFORM_UNAVAILABLE", "message": "无法连接本地平台；请先启动平台服务并检查 LAB_API_URL。"}}, True)
@@ -118,6 +121,84 @@ async def list_dataset_versions(project_id: str) -> CallToolResult:
 async def get_dataset_version(version_id: str) -> CallToolResult:
     """读取已确认版本的内容、来源、质量报告和人工决定快照。"""
     return await call("get_dataset_version", "GET", f"/dataset-versions/{quote(version_id, safe='')}")
+
+
+@server.tool(annotations=READ)
+async def list_evaluation_runs(project_id: str) -> CallToolResult:
+    """列出已导入的真实运行，取得评审所需的运行编号。"""
+    return await call("list_evaluation_runs", "GET", "/evaluation-runs?" + urlencode({"project_id": project_id}))
+
+
+@server.tool(annotations=WRITE)
+async def start_judgment(run_id: str, judgment: JudgeRequest) -> CallToolResult:
+    """按固定 Skill 版本发起归档整理或模拟 Judge。返回任务编号；mode=mock 为离线模拟，模型请求为0。"""
+    return await call("start_judgment", "POST", f"/evaluation-runs/{quote(run_id, safe='')}/judgments", judgment.model_dump(),
+                      projection=lambda body: {key: body[key] for key in
+                                               ("id", "run_id", "status", "mode", "created_at", "revision", "error")})
+
+
+@server.tool(annotations=READ)
+async def get_evaluation_run(run_id: str) -> CallToolResult:
+    """读取该次实际运行包含的案例ID、固定判据、归档来源和证据清单，用于确定Judge范围。"""
+    return await call("get_evaluation_run", "GET", f"/evaluation-runs/{quote(run_id, safe='')}",
+                      projection=lambda body: {
+                          "id": body["id"], "project_id": body["project_id"],
+                          "dataset": body.get("dataset"),
+                          "cases": [{"id": case["id"], "title": case.get("title"),
+                                     "check_ids": [row["id"] for row in case.get("checks", [])]}
+                                    for case in body.get("cases", [])]})
+
+
+@server.tool(annotations=READ)
+async def get_judgment(run_id: str, judgment_id: str, case_id: str | None = None) -> CallToolResult:
+    """读取评审概要。指定case_id读取逐项判定与证据引用；文件全文用get_evaluation_evidence按需读取。"""
+    return await call("get_judgment", "GET",
+                      f"/evaluation-runs/{quote(run_id, safe='')}/judgments/{quote(judgment_id, safe='')}",
+                      projection=lambda body: compact_judgment(body, case_id))
+
+
+def compact_judgment(body, case_id=None):
+    report = body.get("report")
+    if not report:
+        return body
+    cases = report["cases"]
+    if case_id:
+        cases = [case for case in cases if case["id"] == case_id]
+    compact_cases = []
+    for case in cases:
+        item = {"id": case["id"], "title": case["title"], "core_acceptance": case["core_acceptance"]}
+        if case_id:
+            item["checks"] = [
+                {**{key: value for key, value in row.items() if key != "evidence"},
+                 "evidence": [{key: ref[key] for key in ("path", "sha256", "label")}
+                              for ref in row["evidence"]]}
+                for row in case["checks"]]
+        else:
+            item["failed_checks"] = [row["id"] for row in case["checks"] if row["value"] == 0]
+            item["unknown_checks"] = [row["id"] for row in case["checks"] if row["value"] == "unknown"]
+        compact_cases.append(item)
+    return {**{key: value for key, value in body.items() if key not in ("report", "reviews")},
+            "report": {key: report[key] for key in ("run_id", "skill", "mode", "is_simulation", "model_requests", "provenance")},
+            "cases": compact_cases,
+            "findings": [{key: value for key, value in row.items() if key != "evidence"}
+                         for row in report["findings"] if not case_id or row["case_id"] == case_id]}
+
+
+@server.tool(annotations=READ)
+async def get_evaluation_evidence(run_id: str, path: str, start_line: int = 1, line_count: int = 60) -> CallToolResult:
+    """按行读取归档清单内证据并核对哈希，最多200行。path来自评审引用。"""
+    return await call("get_evaluation_evidence", "GET",
+                      f"/evaluation-runs/{quote(run_id, safe='')}/artifact?" + urlencode({"path": path}),
+                      projection=lambda body: excerpt_evidence(body, start_line, line_count))
+
+
+def excerpt_evidence(body, start_line, line_count):
+    lines = body["content"].splitlines()
+    start = max(1, start_line)
+    count = min(200, max(1, line_count))
+    return {**{key: value for key, value in body.items() if key != "content"},
+            "start_line": start, "total_lines": len(lines),
+            "content": "\n".join(lines[start - 1:start - 1 + count])}
 
 
 def main():

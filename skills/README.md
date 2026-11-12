@@ -1,17 +1,17 @@
 # 共创 Skill
 
-本目录保存用户共同设计并确认同步的两份首版试用方法。
+本目录保存两份共创方法的源码与平台导入文件。
 
 | Skill | 方法版本 | 职责 |
 | --- | --- | --- |
-| [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.2 | 根据项目和需求筛选、适配评测案例，分别交付用户需求任务和能力专项 |
-| [结果判定与评分](agent-result-grading/SKILL.md) | 0.1.0 | 根据运行证据逐项判定，分别汇总多个维度与任务验收，交付问题线索 |
+| [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
+| [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
 
-原始正文保留其版本及试用状态；同步不代表方法已经完成真实运行验证或判定器校准。本次不新增问题分析 Skill，不接入真实执行器。
+方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
 
 ## 两种表示
 
-- 各 Skill 子目录保存原始文件，文件字节与本次确认的来源包一致。评分 Skill 包含参考说明、示例 JSON、汇总脚本和客户端元数据。
+- 各 Skill 子目录保存正文和参考资料。评分 Skill 另含示例 JSON、汇总脚本和客户端元数据。
 - `platform/*.json` 是现有 `POST /api/v1/skills/{id}/versions` 可接受的请求体。平台目前只保存单篇文本，因此合并正文与参考资料，并将相对链接改为文内锚点；评分示例与脚本以完整代码块收录。平台不会执行这些代码。
 - `catalog.json` 保存目录元数据、方法版本、每个原始文件的 SHA-256 和平台内容哈希。平台哈希采用 `backend/lab/quality_checks.py` 中 `digest({"content": text})` 的规范化算法，并非纯文本字节哈希。
 
