@@ -22,6 +22,7 @@ import { Button } from "./ui/button";
 import { Skills } from "./skills";
 import { Connections } from "./connections";
 import { DatasetWorkspace } from "./dataset-workspace";
+import { ImportedRuns } from "./imported-runs";
 
 const nav = [
   ["projects", "项目", FolderKanban],
@@ -118,6 +119,8 @@ export function Lab({ page, id }: { page: string; id?: string }) {
             <Skills />
           ) : page === "datasets" && !example ? (
             <DatasetWorkspace />
+          ) : !example && (page === "evaluations" || page === "run") ? (
+            <ImportedRuns id={page === "run" ? id : undefined} />
           ) : !example ? (
             <EmptyPage page={page} />
           ) : page === "datasets" ? (

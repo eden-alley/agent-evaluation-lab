@@ -12,7 +12,8 @@
 | 共创 Skill 方法 | 已收录通用 Harness 评测 v0.1.2、结果判定与评分 v0.1.0；首版试用，原始包与平台导入内容见 [skills](skills/README.md) |
 | 业务 Skill | 用户可创建目录项并提供内容；平台不代写业务方法 |
 | 数据集质量交接 | 不可变草案、程序校验、外部报告、覆盖数、案例证据定位、人工确认固定版本 |
-| 评测执行、成绩、运行比较 | 执行器尚未接入；相关页面仍只有明确标记的示例 |
+| 真实运行与证据展示 | 读取外部运行归档，展示逐项判定、原题面、轨迹和交付文件；见 [归档说明](docs/EXTERNAL_RUN_IMPORT.md) |
+| 评测执行与运行比较 | 外部 Harness 执行；平台内执行器待接入，运行比较页保留明确标记的示例 |
 
 平台不执行 Skill 文本、不调用模型生成用例。生成与语义检查由外部 Coding Agent 按用户要求完成；平台不会将外部报告自动认证为质量保证。
 
@@ -72,6 +73,7 @@ MCP 只提供读取、草案和报告提交工具，不提供发布技能或确�
 | `backend/lab/quality_checks.py` | 确定性校验、规范化哈希、引用片段验证 |
 | `backend/lab/datasets.py`、`quality_routes.py` | 草案/报告存储、原子确认与不可变版本 |
 | `backend/lab/migrations` | 按版本迁移 SQLite，保留旧数据 |
+| `backend/lab/evaluation_imports.py`、`evaluation_trace.py` | 读取归档运行和清单内证据，核对路径与哈希并整理可回查的轨迹 |
 | `apps/web/components/connections.tsx`、`skills.tsx` | 接入与技能界面 |
 | `apps/web/components/dataset-workspace.tsx`、`quality-detail.tsx` | 项目隔离、报告审阅、案例证据与固定版本 |
 | `apps/web/lib/quality-api.ts`、`quality-types.ts` | 前端请求与数据合同 |
