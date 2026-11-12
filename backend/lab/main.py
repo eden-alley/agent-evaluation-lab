@@ -10,6 +10,8 @@ from .db import connect, initialize
 from .errors import error
 from .datasets import QualityError
 from .request_limits import RequestSizeLimit
+from .rechecking import routes as rechecking
+from .rechecking.sandbox import NativeExecutor
 from fastapi.responses import JSONResponse
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -23,10 +25,14 @@ def create_app(db_path=None):
             conn.execute("""UPDATE judgments SET status='failed',
                 error='{"code":"JUDGE_INTERRUPTED","message":"服务重启中断了评审，请使用新的请求编号重试。"}'
                 WHERE status IN ('queued','running')""")
+            conn.execute("""UPDATE check_runs SET status='failed',
+                error='{"code":"CHECK_INTERRUPTED","message":"服务重启中断了检查，可重新发起；原执行不变。"}'
+                WHERE status IN ('queued','running')""")
         yield
 
     app = FastAPI(title="Agent Evaluation Lab", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.db_path = path
+    app.state.recheck_executor = NativeExecutor()
     app.add_middleware(RequestSizeLimit)
     app.add_middleware(integration.ToolTraffic, db_path=path)
 
@@ -65,6 +71,7 @@ def create_app(db_path=None):
     app.include_router(integration.router)
     app.include_router(evaluation_imports.router)
     app.include_router(judging.router)
+    app.include_router(rechecking.router)
     return app
 
 app = create_app()

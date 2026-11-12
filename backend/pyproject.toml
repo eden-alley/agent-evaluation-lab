@@ -13,4 +13,4 @@ testpaths = ["tests"]
 
 
 [tool.setuptools.package-data]
-lab = ["migrations/*.sql"]
+lab = ["migrations/*.sql", "rechecking/assets/*.py"]

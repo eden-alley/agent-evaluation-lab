@@ -173,7 +173,7 @@ def test_existing_schema_migrates_without_losing_projects(tmp_path):
     initialize(path); initialize(path)
     with sqlite3.connect(path) as conn:
         assert conn.execute("SELECT name FROM projects WHERE id='old'").fetchone()[0] == "Existing"
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 5
         assert conn.execute("SELECT count(*) FROM judgments").fetchone()[0] == 0
         assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
 

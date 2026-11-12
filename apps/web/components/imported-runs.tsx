@@ -11,6 +11,7 @@ import { Header, Badge, Tabs } from "./report-ui";
 import { runCasePresentation } from "../lib/run-case-introductions";
 import { TraceNarrative } from "./trace-narrative";
 import { CurrentCapability } from "./current-capability";
+import { DeliveryRecheck } from "./delivery-recheck";
 
 export function ImportedRuns({ id }: { id?: string }) {
   const [runs, setRuns] = useState<ImportedRun[]>([]),
@@ -337,6 +338,7 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
           )}
         </div>
       )}
+      <DeliveryRecheck key={run.id + item.id} run={run} item={item} />
       <CurrentCapability run={run} caseId={item.id} />
       <Tabs
         labels={[

@@ -1,5 +1,7 @@
 # 外部真实运行展示
 
+2026-11-12 增加 U05 保存交付物的独立检查：任务可关联固定检查程序，使用归档副本产生新的检查记录和证据，不覆盖原运行或历史复核。此入口只运行登记的 Windows 沙箱检查程序，不启动 Agent 或模型。接口、版本和证据边界见 [保存交付物的独立检查](SAVED_DELIVERY_CHECKS.md)。原有 archive/mock 评审与独立检查分开显示。
+
 2026-11-12 新增独立评审流程。真实归档仍由本文的只读接口读取；评审任务、Skill 快照与人工追加终判保存在 SQLite 的独立表。POST /evaluation-runs/{run_id}/judgments 发起 archive 或 mock 任务，GET 同路径列出记录，GET /{job_id} 读取结果，POST /{job_id}/reviews 追加人工决定。当前模式均无模型调用。
 
 archive 明确引用历史判定而未独立重验，mock 明确标记模拟；默认当前能力展示最新 archive，模拟记录单独选择。原归档验收和本次评审状态各有标签。unknown/缺证据与 pending/待人工复核分别展示。
