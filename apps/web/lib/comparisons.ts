@@ -1,3 +1,5 @@
+import { request } from "./api";
+import type { MetricReport } from "./capability-review";
 export type Outcome =
   | "improved"
   | "regressed"
@@ -87,12 +89,16 @@ export interface Recommendation {
   success_signals: string;
   guardrails: string;
   refs: ObservationRef[];
+  known_mechanism?: string;
+  gap?: string;
 }
 export interface ComparisonReport {
   id: string;
   created_at: string;
   report_hash: string;
   source_state: string;
+  source_checked_at: string | null;
+  source_state_scope: "last_full_verification";
   is_simulation: boolean;
   analyst: Analyst;
   summary: string;
@@ -102,6 +108,14 @@ export interface ComparisonReport {
   recommendations: Recommendation[];
   progress: Progress;
   validation_scope: string;
+  metric_report?: MetricReport;
+  analysis_origin?: {
+    kind: string;
+    model_calls: number | null;
+    statistics: string;
+    advice: string;
+  };
+  workflow?: Comparison["workflow"];
 }
 export interface Comparison {
   id: string;
@@ -116,6 +130,8 @@ export interface Comparison {
   candidate: Source | null;
   workflow: { skill_id: string; version_id: string; content_hash: string };
   source_state: string;
+  source_checked_at: string | null;
+  source_state_scope: "last_full_verification";
   progress: Progress;
   queue: {
     case_id: string;
@@ -149,6 +165,8 @@ export interface ComparisonCase {
   case_id: string;
   task_state: string;
   source_state: string;
+  source_checked_at: string | null;
+  source_state_scope: "last_full_verification";
   baseline: CaseSide | null;
   candidate: CaseSide | null;
   latest_analysis: CaseAnalysis | null;
@@ -215,4 +233,50 @@ export function evidencePreview(path: string, raw: string): string {
   } catch {
     return raw;
   }
+}
+
+export interface SourceVerification {
+  source_state: string;
+  source_checked_at: string | null;
+  source_state_scope?: "last_full_verification";
+}
+export async function loadComparisonView(
+  id: string,
+  get: typeof request = request,
+) {
+  return id
+    ? { detail: await get<Comparison>(comparisonPath(id)), items: null }
+    : {
+        detail: null,
+        items: (await get<{ items: Comparison[] }>("/comparisons")).items,
+      };
+}
+export function sourceVerificationText(source: SourceVerification): string {
+  if (!source.source_checked_at) return "最近完整校验：未记录";
+  const date = new Date(source.source_checked_at);
+  const time = Number.isNaN(date.getTime())
+    ? source.source_checked_at
+    : date.toLocaleString("zh-CN");
+  const state =
+    source.source_state === "unchanged"
+      ? "未变化"
+      : source.source_state === "changed"
+        ? "已变化"
+        : "未核验";
+  return `最近完整校验：${time} · ${state}`;
+}
+export function createEvidenceVerifier(
+  id: string,
+  send: typeof request = request,
+) {
+  let pending: Promise<SourceVerification> | null = null;
+  return () => {
+    if (!pending)
+      pending = send<SourceVerification>(`${comparisonPath(id)}/verify`, {
+        method: "POST",
+      }).finally(() => {
+        pending = null;
+      });
+    return pending;
+  };
 }

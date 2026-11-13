@@ -37,6 +37,9 @@ def test_external_stdio_reads_materials_and_submits_reports(comparison_env):
                 contract = await call("get_comparison_contract")
                 assert contract["schema_version"] == 1
                 plan = await call("create_comparison", {"comparison": payload})
+                checked = await call("verify_comparison_sources", {"comparison_id": plan["id"]})
+                assert checked["source_state"] == "unchanged" and checked["source_checked_at"]
+                assert checked["source_state_scope"] == "last_full_verification"
                 material = await call("get_comparison_case", {"comparison_id": plan["id"], "case_id": CASE})
                 ref = material["baseline"]["materials"][0]
                 text = await call("read_comparison_material", {"comparison_id": plan["id"], "case_id": CASE, "material_id": ref["id"], "line_count": 5})
@@ -48,6 +51,19 @@ def test_external_stdio_reads_materials_and_submits_reports(comparison_env):
                 assert "case_analyses" not in report
                 detail = await call("get_comparison", {"comparison_id": plan["id"]})
                 assert detail["progress"]["collection_complete"] is True
+                packet = await call("prepare_capability_review", {"comparison_id": plan["id"]})
+                assert packet["metric_report"]["registry_version"] == "saved-checks-0.2.0"
+                friendly = await call("read_capability_material", {"comparison_id": plan["id"], "case_id": CASE,
+                    "side": "baseline", "path": "events.jsonl", "line_count": 5})
+                assert "AssertionError" in friendly["excerpt"]
+                from test_capability_review import document
+                lite = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": document()})
+                assert lite["metric_report"]["coverage"]["unassessed"] >= 4
+                assert lite["analysis_origin"]["kind"] == "external_agent"
+                retry = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": document()})
+                assert retry["id"] == lite["id"]
+                assert "case_analyses" not in lite
+                assert all("case_evidence" not in m for m in lite["metric_report"]["quality"])
         asyncio.run(workflow())
     finally:
         server.should_exit = True

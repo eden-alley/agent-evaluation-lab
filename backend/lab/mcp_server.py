@@ -24,16 +24,22 @@ def result(body, is_error=False):
     return CallToolResult(content=[TextContent(type="text", text=canonical(body))], structuredContent=body, isError=is_error)
 
 
-async def call(tool, method, path, payload=None, projection=None):
+async def call(tool, method, path, payload=None, projection=None, timeout=20):
     try:
         base = api_url()
         headers = {"X-Lab-Tool": tool, "X-Lab-Client": quote(os.environ.get("LAB_CLIENT_NAME", "external-coding-agent"), safe="")}
-        async with httpx.AsyncClient(base_url=base, timeout=20, trust_env=False, follow_redirects=False) as client:
+        async with httpx.AsyncClient(base_url=base, timeout=timeout, trust_env=False, follow_redirects=False) as client:
             response = await client.request(method, "/api/v1" + path, json=payload, headers=headers)
-        body = response.json()
+        try:
+            body = response.json()
+        except ValueError:
+            return result({"error": {"code": "PLATFORM_RESPONSE_INVALID", "status_code": response.status_code,
+                "message": "平台返回非JSON；提交状态待核对，请保留原提交内容和编号。"}}, True)
         if response.is_success and projection:
             body = projection(body)
         return result(body, not response.is_success)
+    except httpx.TimeoutException:
+        return result({"error": {"code": "PLATFORM_TIMEOUT", "message": "平台请求超时，提交状态尚未确认。使用同一材料包与分析重试取回回执，不要另造编号。"}}, True)
     except (httpx.HTTPError, ValueError):
         return result({"error": {"code": "PLATFORM_UNAVAILABLE", "message": "无法连接本地平台；请先启动平台服务并检查 LAB_API_URL。"}}, True)
 

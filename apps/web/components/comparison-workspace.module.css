@@ -75,6 +75,15 @@
 .intro h2 {
   margin-bottom: 10px;
 }
+.compactIntro {
+  padding: 14px 16px;
+  margin: 8px 0 12px;
+  font-size: 13px;
+}
+.compactIntro p + p {
+  margin-top: 5px;
+  font-size: 12px;
+}
 .section {
   margin: 26px 0;
 }

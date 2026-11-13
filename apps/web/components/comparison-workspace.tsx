@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { request } from "../lib/api";
 import type { Comparison } from "../lib/comparisons";
-import { comparisonPath, demonstration } from "../lib/comparisons";
+import { demonstration, loadComparisonView } from "../lib/comparisons";
 import { Header } from "./report-ui";
 import { ComparisonCreate } from "./comparison-create";
 import { ComparisonReportView } from "./comparison-report";
@@ -10,48 +9,34 @@ import styles from "./comparison-workspace.module.css";
 
 export function ComparisonWorkspace() {
   const [items, setItems] = useState<Comparison[]>([]),
-    [selected, setSelected] = useState(""),
+    [selected, setSelected] = useState<string | null>(null),
     [detail, setDetail] = useState<Comparison | null>(null);
   const [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [showCreate, setShowCreate] = useState(false),
     [reload, setReload] = useState(0);
   useEffect(() => {
+    setSelected(
+      new URLSearchParams(window.location.search).get("comparison") ?? "",
+    );
+  }, []);
+  useEffect(() => {
+    if (selected === null) return;
     let active = true;
-    request<{ items: Comparison[] }>("/comparisons")
-      .then((r) => {
-        if (active) {
-          setItems(r.items);
-          const id = new URLSearchParams(window.location.search).get(
-            "comparison",
-          );
-          if (id) setSelected(id);
-        }
+    setError("");
+    setLoading(true);
+    setDetail(null);
+    loadComparisonView(selected)
+      .then((result) => {
+        if (!active) return;
+        if (result.items) setItems(result.items);
+        setDetail(result.detail);
       })
       .catch((e) => {
         if (active) setError(e.message);
       })
       .finally(() => {
         if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [reload]);
-  useEffect(() => {
-    if (!selected) {
-      setDetail(null);
-      return;
-    }
-    let active = true;
-    setError("");
-    setDetail(null);
-    request<Comparison>(comparisonPath(selected))
-      .then((r) => {
-        if (active) setDetail(r);
-      })
-      .catch((e) => {
-        if (active) setError(e.message);
       });
     return () => {
       active = false;
@@ -65,11 +50,10 @@ export function ComparisonWorkspace() {
     else url.searchParams.delete("comparison");
     url.searchParams.delete("case");
     window.history.replaceState(null, "", url);
-    setReload((v) => v + 1);
   }
   return (
     <div className={styles.workspace}>
-      {(!selected || showCreate) && (
+      {(selected === "" || showCreate) && (
         <Header
           title="版本对比"
           desc="对照真实记录，查看表现变化、证据与下一步开发方向。"

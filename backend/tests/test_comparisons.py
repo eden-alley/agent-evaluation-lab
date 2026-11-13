@@ -145,7 +145,9 @@ def test_source_drift_blocks_new_analysis_but_keeps_saved_report(comparison_env)
     report = client.post(url + "/reports", json=final_payload(first)).json()
     (folder / "run.json").write_text("{}", encoding="utf-8")
     saved = client.get(url + "/reports/" + report["id"])
-    assert saved.status_code == 200 and saved.json()["source_state"] == "changed"
+    assert saved.status_code == 200 and saved.json()["source_state"] == "unchanged"
+    assert saved.json()["source_state_scope"] == "last_full_verification"
+    assert client.post(url + "/verify").json()["source_state"] == "changed"
     assert saved.json()["case_analyses"][0]["content"]["observations"][0]["evidence"][0]["excerpt"]
     assert client.post(url + f"/cases/{CASE}/analyses", json={**payload, "request_id": "new", "revision": 1}).status_code == 409
 

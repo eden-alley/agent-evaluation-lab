@@ -57,31 +57,64 @@ def progress(snapshot, cases):
             "not_covered": sum(o["outcome"] == "not_covered" for o in observations)}
 
 
-def report_object(request, row, snapshot):
-    return {"id": row["id"], "created_at": row["created_at"], "source_state": materials.source_state(request, snapshot),
-            **json.loads(row["content"])}
+def source_status(conn, identity):
+    row = conn.execute("SELECT source_state,checked_at FROM comparison_source_checks WHERE comparison_id=?", (identity,)).fetchone()
+    return {"source_state": row["source_state"] if row else "unchecked",
+            "source_checked_at": row["checked_at"] if row else None,
+            "source_state_scope": "last_full_verification"}
+
+
+def verify_sources(conn, request, identity, snapshot=None):
+    if snapshot is None:
+        _, snapshot = require(conn, identity)
+    state, checked_at = materials.source_state(request, snapshot), now()
+    conn.execute("""INSERT INTO comparison_source_checks VALUES (?,?,?)
+        ON CONFLICT(comparison_id) DO UPDATE SET source_state=excluded.source_state,checked_at=excluded.checked_at
+        WHERE excluded.checked_at >= comparison_source_checks.checked_at""",
+                 (identity, state, checked_at))
+    return source_status(conn, identity)
+
+
+def report_object(row, verification):
+    return {"id": row["id"], "created_at": row["created_at"], **json.loads(row["content"]), **verification}
+
+
+def report_summaries(conn, identity):
+    return conn.execute("""SELECT id,created_at,json_extract(content,'$.case_report_ids') AS case_report_ids
+        FROM comparison_reports WHERE comparison_id=? ORDER BY created_at DESC,id DESC""", (identity,)).fetchall()
+
+
+def overview(row, snapshot, analyses, reports, verification):
+    p = progress(snapshot, analyses)
+    source = lambda v: {k: value for k, value in v.items() if k != "cases"} if v else None
+    state = "waiting_candidate" if not snapshot.get("candidate") else "reported" if reports else "ready" if p["collection_complete"] else "collecting"
+    return {"id": row["id"], "project_id": row["project_id"], "created_at": row["created_at"],
+            "name": snapshot["name"], "objective": snapshot["objective"], "workflow": snapshot["workflow"],
+            "analyst": snapshot["analyst"], "baseline": source(snapshot["baseline"]), "candidate": source(snapshot.get("candidate")),
+            "is_simulation": snapshot["is_simulation"], **verification,
+            "progress": p, "state": state,
+            "reports": [{"id": r["id"], "created_at": r["created_at"]} for r in reports],
+            "has_unreported_changes": bool(reports and set(json.loads(reports[0]["case_report_ids"])) != {a["id"] for a in analyses.values()})}
+
+
+def summary(conn, row, snapshot):
+    return overview(row, snapshot, latest_analyses(conn, row["id"]),
+                    report_summaries(conn, row["id"]), source_status(conn, row["id"]))
 
 
 def detail(conn, request, row, snapshot):
     analyses = latest_analyses(conn, row["id"])
-    reports = conn.execute("SELECT * FROM comparison_reports WHERE comparison_id=? ORDER BY created_at DESC,id DESC", (row["id"],)).fetchall()
-    p = progress(snapshot, analyses)
+    reports = report_summaries(conn, row["id"])
+    verification = source_status(conn, row["id"])
     queue = []
     for cid in snapshot["case_ids"]:
         case = (snapshot["baseline"]["cases"].get(cid) or (snapshot.get("candidate") or {}).get("cases", {}).get(cid))["case"]
         current = analyses.get(cid)
         queue.append({"case_id": cid, "title": case.get("title", cid), "task_state": task_state(snapshot, cid),
                       "analysis_id": current["id"] if current else None, "revision": current["revision"] if current else 0})
-    source = lambda v: {k: value for k, value in v.items() if k != "cases"} if v else None
-    state = "waiting_candidate" if not snapshot.get("candidate") else "reported" if reports else "ready" if p["collection_complete"] else "collecting"
-    return {"id": row["id"], "project_id": row["project_id"], "created_at": row["created_at"],
-            "name": snapshot["name"], "objective": snapshot["objective"], "workflow": snapshot["workflow"],
-            "analyst": snapshot["analyst"], "baseline": source(snapshot["baseline"]), "candidate": source(snapshot.get("candidate")),
-            "is_simulation": snapshot["is_simulation"], "source_state": materials.source_state(request, snapshot),
-            "progress": p, "state": state, "queue": queue,
-            "reports": [{"id": r["id"], "created_at": r["created_at"]} for r in reports],
-            "latest_report": report_object(request, reports[0], snapshot) if reports else None,
-            "has_unreported_changes": bool(reports and set(json.loads(reports[0]["content"])["case_report_ids"]) != {a["id"] for a in analyses.values()})}
+    latest = conn.execute("SELECT * FROM comparison_reports WHERE id=?", (reports[0]["id"],)).fetchone() if reports else None
+    return {**overview(row, snapshot, analyses, reports, verification), "queue": queue,
+            "latest_report": report_object(latest, verification) if latest else None}
 
 
 def create(conn, request, payload):
@@ -113,6 +146,7 @@ def create(conn, request, payload):
     identity = str(uuid.uuid4())
     conn.execute("INSERT INTO comparisons VALUES (?,?,?,?,?,?)",
                  (identity, baseline["project_id"], payload.request_id, digest(data), canonical(snapshot), now()))
+    verify_sources(conn, request, identity, snapshot)
     row, snapshot = require(conn, identity)
     return detail(conn, request, row, snapshot)
 
@@ -128,7 +162,7 @@ def case_context(conn, request, identity, cid):
             return None
         return {**case, "is_simulation": source["is_simulation"],
                 "materials": [{k: v for k, v in m.items() if k != "content"} for m in case["materials"]]}
-    return {"case_id": cid, "task_state": task_state(snapshot, cid), "source_state": materials.source_state(request, snapshot),
+    return {"case_id": cid, "task_state": task_state(snapshot, cid), **source_status(conn, identity),
             "baseline": side("baseline"), "candidate": side("candidate"),
             "workflow": snapshot["workflow"], "is_simulation": snapshot["is_simulation"],
             "latest_analysis": latest_analyses(conn, identity).get(cid)}
@@ -172,7 +206,7 @@ def submit_report(conn, request, identity, payload):
     if previous:
         if previous["request_hash"] != digest(data):
             raise QualityError("REQUEST_CONFLICT", "整体报告请求编号已有不同内容。", 409)
-        return report_object(request, previous, snapshot)
+        return report_object(previous, source_status(conn, identity))
     materials.assert_current(request, snapshot)
     cases = latest_analyses(conn, identity)
     if set(cases) != set(snapshot["case_ids"]) or {a["id"] for a in cases.values()} != set(payload.case_report_ids):
@@ -193,4 +227,4 @@ def submit_report(conn, request, identity, payload):
     content["report_hash"] = digest(content)
     rid = str(uuid.uuid4())
     conn.execute("INSERT INTO comparison_reports VALUES (?,?,?,?,?,?)", (rid, identity, payload.request_id, digest(data), canonical(content), now()))
-    return report_object(request, conn.execute("SELECT * FROM comparison_reports WHERE id=?", (rid,)).fetchone(), snapshot)
+    return report_object(conn.execute("SELECT * FROM comparison_reports WHERE id=?", (rid,)).fetchone(), source_status(conn, identity))

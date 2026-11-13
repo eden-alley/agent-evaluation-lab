@@ -112,12 +112,32 @@ def simulation(baseline, case_ids):
 
 
 def source_state(request, snapshot):
+    # Cache only within this HTTP request, for the exact pinned sources/scope.
+    # Original files are checked afresh on the next strict request.
+    state = getattr(request, "state", None)
+    if state is None:
+        return _scan_sources(request, snapshot)
+    key = tuple((name, source["run_id"], source["run_hash"], source["manifest_hash"],
+                 tuple((m["path"], m["bytes"], m["sha256"])
+                       for case in source["cases"].values() for m in case["materials"] if m["kind"] == "archive"))
+                for name in ("baseline", "candidate")
+                if (source := snapshot.get(name)) and source["kind"] == "run")
+    cache = getattr(state, "comparison_source_checks", None)
+    if cache is None:
+        cache = state.comparison_source_checks = {}
+    if key not in cache:
+        cache[key] = _scan_sources(request, snapshot)
+    return cache[key]
+
+
+def _scan_sources(request, snapshot):
     for side in ("baseline", "candidate"):
         source = snapshot.get(side)
         if not source or source["kind"] != "run":
             continue
         folder = Path(request.app.state.db_path).parent / "evaluation-runs" / source["run_id"]
         try:
+            resolved_folder = folder.resolve()
             if (sha((folder / "run.json").read_bytes()) != source["run_hash"]
                     or sha((folder / "manifest.json").read_bytes()) != source["manifest_hash"]):
                 return "changed"
@@ -128,7 +148,7 @@ def source_state(request, snapshot):
                         continue
                     seen.add(material["path"])
                     target = (folder / material["path"]).resolve()
-                    if not target.is_relative_to(folder.resolve()) or not target.is_file():
+                    if not target.is_relative_to(resolved_folder) or not target.is_file():
                         return "changed"
                     raw = target.read_bytes()
                     if len(raw) != material["bytes"] or sha(raw) != material["sha256"]:

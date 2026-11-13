@@ -117,6 +117,11 @@ class FinalReportInput(Contract):
 
 
 def contract():
+    from .review_schemas import Analysis, ReviewSubmission
     return {"schema_version": 1, "comparison": ComparisonInput.model_json_schema(),
             "case_analysis": CaseAnalysisInput.model_json_schema(), "final_report": FinalReportInput.model_json_schema(),
-            "policy": "外部分析报告不改变原评分；模拟来源由服务端标注；提交接口不启动模型。"}
+            "lightweight_review": {"version": "0.2.0", "analyst_document": Analysis.model_json_schema(),
+                                   "program_envelope": ReviewSubmission.model_json_schema()},
+            "policy": "外部分析报告不改变原评分；模拟来源由服务端标注；提交接口不启动模型。"
+                      "历史报告、列表与题目目录不重验原件；source_state为最近完整校验结果，source_checked_at为记录时间，"
+                      "没有记录时为unchecked/null。POST /comparisons/{id}/verify重新校验；原始证据读取和新分析/汇总提交严格校验。"}
