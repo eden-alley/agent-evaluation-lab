@@ -168,14 +168,17 @@ def case_context(conn, request, identity, cid):
             "latest_analysis": latest_analyses(conn, identity).get(cid)}
 
 
-def submit_case(conn, request, identity, cid, payload):
+def submit_case(conn, request, identity, cid, payload, *, explanation=None):
     _, snapshot = require(conn, identity)
     if cid not in snapshot["case_ids"]:
         raise QualityError("CASE_NOT_FOUND", "该题不在比较清单中。", 404)
     data = payload.model_dump()
+    if explanation is not None:
+        data["explanation"] = explanation
+    request_hash = digest(data)
     previous = conn.execute("SELECT * FROM comparison_case_reports WHERE comparison_id=? AND request_id=?", (identity, payload.request_id)).fetchone()
     if previous:
-        if previous["case_id"] != cid or previous["request_hash"] != digest(data):
+        if previous["case_id"] != cid or previous["request_hash"] != request_hash:
             raise QualityError("REQUEST_CONFLICT", "逐题报告请求编号已有不同内容。", 409)
         return analysis_object(previous)
     materials.assert_current(request, snapshot)
@@ -195,7 +198,7 @@ def submit_case(conn, request, identity, cid, payload):
         observation["evidence"] = refs
     rid = str(uuid.uuid4())
     conn.execute("INSERT INTO comparison_case_reports VALUES (?,?,?,?,?,?,?,?)", (rid, identity, cid,
-                 payload.revision + 1, payload.request_id, digest(payload.model_dump()), canonical(data), now()))
+                 payload.revision + 1, payload.request_id, request_hash, canonical(data), now()))
     return analysis_object(conn.execute("SELECT * FROM comparison_case_reports WHERE id=?", (rid,)).fetchone())
 
 

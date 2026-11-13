@@ -10,6 +10,12 @@ def compact_analysis(value):
     value["content"]["observations"] = [{**o, "evidence": [
         {k: v for k, v in e.items() if k not in ("excerpt", "content")} for e in o["evidence"]]}
         for o in value["content"]["observations"]]
+    if value["content"].get("explanation"):
+        explanation = value["content"]["explanation"]
+        def compact_paragraph(p):
+            return {**p, "evidence": [{k: v for k, v in e.items() if k not in ("excerpt", "display_excerpt", "content")} for e in p["evidence"]]}
+        value["content"]["explanation"] = {**explanation, "stages": [compact_paragraph(p) for p in explanation["stages"]],
+                                          "result": compact_paragraph(explanation["result"])}
     return value
 
 
@@ -111,7 +117,7 @@ def register(server, call, read, write):
 
     @server.tool(annotations=write)
     async def submit_capability_review(comparison_id: str, analysis: Analysis):
-        """一次提交简短分析；程序管理固定材料、并发修订和逐题引用。相同材料与分析可安全取回同一回执。"""
+        """一次提交简短分析、可选代表题讲解与建议；程序解析事件/检查项引用并管理修订。相同输入可取回同一回执。"""
         if comparison_id not in prepared:
             raise ValueError("请先在本次连接调用 prepare_capability_review；程序需要保存的材料包才能安全提交。")
         return await call("submit_capability_review", "POST", route(comparison_id) + "/review",

@@ -76,6 +76,18 @@ def markdown(packet, report=None):
         lines.append(f"| {m['name']} | {m['before']} | {m['after']} | {change} |")
     lines += ["", "未评估维度：", ""] + [f"- {m['name']}：{m['reason']}" for m in table["unassessed"]]
     if report:
+        for case in report.get("case_analyses", []):
+            explanation = case["content"].get("explanation")
+            if not explanation:
+                continue
+            focus = {"baseline": "A运行", "candidate": "B运行", "comparison": "A/B对照"}[explanation["focus"]]
+            lines += ["", f"## {case['case_id']} 任务过程讲解 · {focus}", "", explanation["background"], "", "本次结果：" + explanation["result"]["text"], ""]
+            for stage in explanation["stages"]:
+                lines += [f"### {stage['title']}", "", stage["text"], ""]
+                for e in stage["evidence"]:
+                    location = f"事件{e['event_id']}" if e.get("event_id") else f"检查项{e['check_id']}" if e.get("check_id") else f"第{e['start_line']}行起"
+                    lines.append(f"- 依据：{'A' if e['source']=='baseline' else 'B'} · {e['path']} · {location}")
+            lines += ["", *["- 讲解限制：" + s for s in explanation["limitations"]]]
         lines += ["", "开发建议：", ""]
         for i, r in enumerate(report["recommendations"], 1):
             lines += [f"{i}. **{r['title']}**：{r['action']}", f"   验证：{r['validation']}", ""]

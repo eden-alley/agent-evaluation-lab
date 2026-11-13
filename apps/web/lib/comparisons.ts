@@ -32,6 +32,17 @@ export interface Material {
   line_count?: number;
   is_simulation?: boolean;
   truncated?: boolean;
+  display_excerpt?: string;
+  event_id?: number;
+  check_id?: string;
+}
+export interface CaseExplanation {
+  case_id: string;
+  focus: "baseline" | "candidate" | "comparison";
+  background: string;
+  stages: { title: string; text: string; evidence: Material[] }[];
+  result: { text: string; evidence: Material[] };
+  limitations: string[];
 }
 export interface Observation {
   id: string;
@@ -49,7 +60,11 @@ export interface CaseAnalysis {
   case_id: string;
   revision: number;
   created_at: string;
-  content: { summary: string; observations: Observation[] };
+  content: {
+    summary: string;
+    observations: Observation[];
+    explanation?: CaseExplanation;
+  };
 }
 export interface Analyst {
   kind: string;
@@ -116,6 +131,11 @@ export interface ComparisonReport {
     advice: string;
   };
   workflow?: Comparison["workflow"];
+  explanation_coverage?: {
+    provided: number;
+    planned: number;
+    case_ids: string[];
+  };
 }
 export interface Comparison {
   id: string;

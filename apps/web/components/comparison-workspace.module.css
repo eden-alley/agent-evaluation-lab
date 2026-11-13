@@ -84,6 +84,11 @@
   margin-top: 5px;
   font-size: 12px;
 }
+.explanationResult {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
 .section {
   margin: 26px 0;
 }

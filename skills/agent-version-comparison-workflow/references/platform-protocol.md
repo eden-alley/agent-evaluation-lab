@@ -1,6 +1,6 @@
 # 轻量分析的程序接口
 
-当前协议 v0.2.0。程序准备和提交，分析者只填写分析文档。旧逐题接口和 JSON Schema 保留供历史调用兼容，不再打包进每次分析的 Skill。
+当前协议 v0.3.0。程序准备和提交，分析者只填写分析文档及可选的代表题过程讲解。旧输入和逐题接口继续兼容；JSON Schema按需读取，不打包进默认Skill正文。
 
 CLI（仓库根目录，平台 API 已启动）：
 
@@ -17,3 +17,5 @@ MCP 使用同一条连接：`prepare_capability_review(comparison_id)`、按需 
 HTTP：`GET /api/v1/comparisons/{id}/review-materials` 读取固定快照并计算统计，不自动扫描原件；`POST .../verify` 严格校验；`GET .../review-material` 按题号、侧和文件路径补读；`POST .../review` 校验程序信封后，在同一事务中追加逐题记录和整体报告。
 
 发布 Skill 时仅打包主 Skill 与短复盘清单。指标定义在程序注册表中版本化，具体适用题、原检查项与排除理由随报告保存。缺乏统一判据的语义维度显示未评估；没有新增模型评分器。
+
+`case_explanations` 可不填；需要时参照生成的 `analysis-format.json` 和仓库中的 `examples/capability-review/u05-explanation-offline.json`。逐段引用用A/B侧、文件路径及事件编号/检查项编号，程序负责固定引用。保存后报告包含讲解覆盖数，逐题内容包含固定讲解与原件节选；Markdown导出也包含讲解。

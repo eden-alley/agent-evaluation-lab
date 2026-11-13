@@ -1,0 +1,131 @@
+{
+  "summary": "U05新版完成了/limits查询和报告，独立功能检查通过；但改动了要求保持原样的测试文件，README的修改也被原检查记为越界，整体仍未通过。下面讲解B的关键经过，A仅保留原判据和资源对照。",
+  "recommendations": [
+    {
+      "title": "核对受保护文件写入时的约束是否生效",
+      "metric_id": "scope",
+      "case_ids": [
+        "U05"
+      ],
+      "known_mechanism": "原归档已有scope检查，并明确记录README.md与tests/test_contract.py被修改；当时的写入拦截与保护配置尚未核查。",
+      "gap": "功能和报告已经交付，但修改范围检查由A的通过变为B的未通过。",
+      "cause_status": "hypothesis",
+      "cause": "可能是约束未贯穿写入入口、保护配置存在缺口，或Agent没有遵守已提供的要求；现有记录尚不能确定原因。",
+      "action": "先只读核对写入原测试文件和README时的工具记录、允许路径及已有保护机制，再决定修复入口还是补足既有约束。",
+      "validation": "后续固定题面、预算、模型和SYSTEM，检查保护文件字节未变，同时独立功能检查与报告仍满足要求。",
+      "success_signals": "功能、最终验证和报告保留，修改范围检查恢复通过。",
+      "guardrails": "不放宽原文件保留要求，不把新增测试写进受保护文件，也不根据最终回复宣称任务整体成功。"
+    }
+  ],
+  "limitations": [
+    "本报告使用两次真实U05归档；过程讲解由离线整理提供，没有调用模型、重新执行任务或重新判分。",
+    "讲解范围是B运行，A仅作原判据对照；两版请求上限30→60，不能据此归因某个Harness改动。"
+  ],
+  "case_explanations": [
+    {
+      "case_id": "U05",
+      "focus": "candidate",
+      "background": "用户希望在本机CLI输入/limits，直接查看启动时实际生效的步数、tokens和时间限制。命令必须只读，保留普通对话和/auto，并交付代码及报告。题目特别要求原有测试文件保持不变。",
+      "stages": [
+        {
+          "title": "实现只读查询，原有检查从失败变为通过",
+          "text": "最初的检查报告失败。Agent随后修改CLI实现，再次运行时原有的1项检查通过，说明查询功能已取得实质进展。这里描述的是Agent当时实际执行的检查，不是讲解者重新运行的结果。",
+          "evidence": [
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 41
+            },
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 51
+            },
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 61
+            }
+          ]
+        },
+        {
+          "title": "新增检查写进了要求保持原样的测试文件",
+          "text": "接着，Agent把新增检查写入tests/test_contract.py。随后7项检查全部通过，但题面要求这个原有文件保持不变。测试通过与遵守修改范围是两件事，这一步违反了原文件保留要求。",
+          "evidence": [
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 66
+            },
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 70
+            },
+            {
+              "side": "candidate",
+              "path": "case-record.json",
+              "check_id": "scope"
+            }
+          ]
+        },
+        {
+          "title": "补充检查与报告后正常结束，范围问题仍然存在",
+          "text": "后续继续补充检查并写出report.md。最后一次可见测试仍通过，Agent给出完成回复后正常结束，并未耗尽60次请求上限。最终归档的范围检查还记录了README.md被改动，因此完成回复不能代表整题已经满足要求。",
+          "evidence": [
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 114
+            },
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 118
+            },
+            {
+              "side": "candidate",
+              "path": "raw/U05/events.jsonl",
+              "event_id": 121
+            },
+            {
+              "side": "candidate",
+              "path": "case-record.json",
+              "check_id": "scope"
+            }
+          ]
+        }
+      ],
+      "result": {
+        "text": "功能检查和报告均已完成，原记录中的最终自测有效值也为通过；整题仍因原测试文件被改动、README修改超出允许范围而未通过。功能进步与范围遵守退步同时存在，原因尚待核查。",
+        "evidence": [
+          {
+            "side": "candidate",
+            "path": "case-record.json",
+            "check_id": "independent"
+          },
+          {
+            "side": "candidate",
+            "path": "case-record.json",
+            "check_id": "report"
+          },
+          {
+            "side": "candidate",
+            "path": "case-record.json",
+            "check_id": "agent_tested_final"
+          },
+          {
+            "side": "candidate",
+            "path": "case-record.json",
+            "check_id": "scope"
+          }
+        ]
+      },
+      "limitations": [
+        "这里只深入讲解B的关键事件，没有完整审阅A的执行经过。",
+        "自测项保留原记录的自动值0、复核后有效值1，不在本次重新裁决。",
+        "事件与检查项可以证明发生了什么，尚不能证明是权限模块、配置或模型决策导致越界。"
+      ]
+    }
+  ]
+}

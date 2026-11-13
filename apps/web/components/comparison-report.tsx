@@ -23,8 +23,17 @@ export function ComparisonReportView({
 }: {
   comparison: Comparison;
 }) {
-  const [tab, setTab] = useState("变化总览"),
-    [caseId, setCaseId] = useState(comparison.queue[0]?.case_id ?? "");
+  const [tab, setTab] = useState(
+      comparison.queue.length === 1 &&
+        comparison.latest_report?.explanation_coverage?.provided
+        ? "逐题对比"
+        : "变化总览",
+    ),
+    [caseId, setCaseId] = useState(
+      comparison.latest_report?.explanation_coverage?.case_ids[0] ??
+        comparison.queue[0]?.case_id ??
+        "",
+    );
   const [reportId, setReportId] = useState(comparison.latest_report?.id ?? ""),
     [report, setReport] = useState<ComparisonReport | null>(
       comparison.latest_report,
@@ -84,7 +93,9 @@ export function ComparisonReportView({
     };
   }, [reportId, comparison]);
   const demo = demonstration(comparison),
-    p = report?.progress ?? comparison.progress;
+    p = report?.progress ?? comparison.progress,
+    caseFirst =
+      tab === "逐题对比" && Boolean(report?.explanation_coverage?.provided);
   function openCase(id: string) {
     setCaseId(id);
     setTab("逐题对比");
@@ -204,130 +215,141 @@ export function ComparisonReportView({
           已有较新的逐题记录，当前汇总仍引用发布时的旧版本。
         </p>
       )}
-      <section
-        className={`${styles.intro} ${report?.metric_report ? styles.compactIntro : ""}`}
-      >
-        {!report?.metric_report && (
-          <h2>
-            {!comparison.candidate
-              ? "等待新版运行"
-              : demo
-                ? "模拟情景中的主要变化"
-                : report
-                  ? "本次观察到的变化"
-                  : "等待外部分析报告"}
-          </h2>
-        )}
-        <p>
-          {report?.summary ??
-            (reportId
-              ? "正在读取所选报告…"
-              : "材料已经固定。把分析指令交给外部Agent，完成一道题即可保存一道记录；平台不会在后台启动模型。")}
-        </p>
-        <p className={styles.muted}>
-          {report?.analysis_origin?.kind === "offline_program"
-            ? "真实归档 · 程序统计，建议由离线整理提供 · 本次未调用模型、未重跑评测。"
-            : "单题单次对照只支持本题本次表现；记录收齐与证据充分分别展示。"}
-        </p>
-        {report?.metric_report && (
-          <p className={styles.muted}>
-            {report.metric_report.conditions
-              .map(
-                (c) =>
-                  `${c.side === "baseline" ? "A" : "B"} 请求上限 ${c.request_caps.join("、") || "未记录"}`,
-              )
-              .join("；")}
-            。 仅描述本次归档表现，不证明稳定能力或某个改动的效果。
-          </p>
-        )}
-      </section>
-      <details className={styles.sourceDetails}>
-        <summary>
-          {report?.metric_report
-            ? `来源与报告版本 · ${p.received}题归档 · ${report.metric_report.coverage.unassessed}个能力方向未评估`
-            : `来源、覆盖与报告版本 · ${p.received}/${p.planned}题已收到 · ${p.unknown}项证据不足 · ${p.not_covered}项未覆盖`}
-        </summary>
-        {report?.metric_report && (
-          <>
-            <p>{comparison.objective}</p>
+      {!caseFirst && (
+        <>
+          <section
+            className={`${styles.intro} ${report?.metric_report ? styles.compactIntro : ""}`}
+          >
+            {!report?.metric_report && (
+              <h2>
+                {!comparison.candidate
+                  ? "等待新版运行"
+                  : demo
+                    ? "模拟情景中的主要变化"
+                    : report
+                      ? "本次观察到的变化"
+                      : "等待外部分析报告"}
+              </h2>
+            )}
             <p>
-              {sourceVerificationText(verification)}；本次打开
-              {verifiedOnOpen ? "已" : "尚未"}重新核验。
+              {report?.summary ??
+                (reportId
+                  ? "正在读取所选报告…"
+                  : "材料已经固定。把分析指令交给外部Agent，完成一道题即可保存一道记录；平台不会在后台启动模型。")}
             </p>
-            <div className={styles.actions}>
-              <button
-                className="button small"
-                disabled={verifying}
-                onClick={() => void verify()}
-              >
-                {verifying ? "正在校验…" : "重新校验证据"}
-              </button>
-              <button className="button small" onClick={() => void copy()}>
-                {copied ? "分析指令已复制" : "复制外部分析指令"}
-              </button>
-            </div>
-            {verificationError && (
-              <p className="error" role="alert">
-                校验失败：{verificationError}
+            <p className={styles.muted}>
+              {report?.analysis_origin?.kind === "offline_program"
+                ? `${comparison.is_simulation ? "包含模拟材料" : "真实归档"} · 程序统计，讲解和建议由离线整理提供 · 本次未调用模型、未重跑评测。`
+                : "单题单次对照只支持本题本次表现；记录收齐与证据充分分别展示。"}
+            </p>
+            {report?.metric_report && (
+              <p className={styles.muted}>
+                {report.metric_report.conditions
+                  .map(
+                    (c) =>
+                      `${c.side === "baseline" ? "A" : "B"} 请求上限 ${c.request_caps.join("、") || "未记录"}`,
+                  )
+                  .join("；")}
+                。 仅描述本次归档表现，不证明稳定能力或某个改动的效果。
               </p>
             )}
-          </>
-        )}
-        <div className={styles.meta}>
-          <span>A：{comparison.baseline.name}</span>
-          <span>B：{comparison.candidate?.name ?? "尚未提供"}</span>
-          <span>
-            分析来源：
-            {report?.analyst.name ??
-              comparison.analyst.name ??
-              comparison.analyst.kind}
-          </span>
-        </div>
-        <div className={styles.progress}>
-          <span>
-            <strong>
-              {p.received}/{p.planned}
-            </strong>
-            题记录已收到
-          </span>
-          <span>
-            <strong>
-              {p.assessed}/{p.observations}
-            </strong>
-            项已给出结论
-          </span>
-          <span>
-            证据不足 {p.unknown} 项 · 未覆盖 {p.not_covered} 项
-          </span>
-        </div>
-        {comparison.reports.length > 0 && (
-          <div className={styles.topline}>
-            <label>
-              报告版本{" "}
-              <select
-                className="input"
-                aria-label="报告版本"
-                value={reportId}
-                onChange={(e) => setReportId(e.target.value)}
-              >
-                {comparison.reports.map((r, i) => (
-                  <option value={r.id} key={r.id}>
-                    {i === 0 ? "最新 · " : "历史 · "}
-                    {new Date(r.created_at).toLocaleString("zh-CN")}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              className="button small"
-              onClick={download}
-              disabled={!report}
-            >
-              导出报告 JSON
-            </button>
-          </div>
-        )}
-      </details>
+          </section>
+          {report?.explanation_coverage && (
+            <p className={styles.muted}>
+              已提供 {report.explanation_coverage.provided}/
+              {report.explanation_coverage.planned}{" "}
+              题的过程讲解；其余题仍保留统计与原判据。
+            </p>
+          )}
+          <details className={styles.sourceDetails}>
+            <summary>
+              {report?.metric_report
+                ? `来源与报告版本 · ${p.received}题归档 · ${report.metric_report.coverage.unassessed}个能力方向未评估`
+                : `来源、覆盖与报告版本 · ${p.received}/${p.planned}题已收到 · ${p.unknown}项证据不足 · ${p.not_covered}项未覆盖`}
+            </summary>
+            {report?.metric_report && (
+              <>
+                <p>{comparison.objective}</p>
+                <p>
+                  {sourceVerificationText(verification)}；本次打开
+                  {verifiedOnOpen ? "已" : "尚未"}重新核验。
+                </p>
+                <div className={styles.actions}>
+                  <button
+                    className="button small"
+                    disabled={verifying}
+                    onClick={() => void verify()}
+                  >
+                    {verifying ? "正在校验…" : "重新校验证据"}
+                  </button>
+                  <button className="button small" onClick={() => void copy()}>
+                    {copied ? "分析指令已复制" : "复制外部分析指令"}
+                  </button>
+                </div>
+                {verificationError && (
+                  <p className="error" role="alert">
+                    校验失败：{verificationError}
+                  </p>
+                )}
+              </>
+            )}
+            <div className={styles.meta}>
+              <span>A：{comparison.baseline.name}</span>
+              <span>B：{comparison.candidate?.name ?? "尚未提供"}</span>
+              <span>
+                分析来源：
+                {report?.analyst.name ??
+                  comparison.analyst.name ??
+                  comparison.analyst.kind}
+              </span>
+            </div>
+            <div className={styles.progress}>
+              <span>
+                <strong>
+                  {p.received}/{p.planned}
+                </strong>
+                题记录已收到
+              </span>
+              <span>
+                <strong>
+                  {p.assessed}/{p.observations}
+                </strong>
+                项已给出结论
+              </span>
+              <span>
+                证据不足 {p.unknown} 项 · 未覆盖 {p.not_covered} 项
+              </span>
+            </div>
+            {comparison.reports.length > 0 && (
+              <div className={styles.topline}>
+                <label>
+                  报告版本{" "}
+                  <select
+                    className="input"
+                    aria-label="报告版本"
+                    value={reportId}
+                    onChange={(e) => setReportId(e.target.value)}
+                  >
+                    {comparison.reports.map((r, i) => (
+                      <option value={r.id} key={r.id}>
+                        {i === 0 ? "最新 · " : "历史 · "}
+                        {new Date(r.created_at).toLocaleString("zh-CN")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="button small"
+                  onClick={download}
+                  disabled={!report}
+                >
+                  导出报告 JSON
+                </button>
+              </div>
+            )}
+          </details>
+        </>
+      )}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -424,21 +446,23 @@ export function ComparisonReportView({
             </>
           ) : tab === "逐题对比" ? (
             <>
-              <label className={styles.meta}>
-                当前题目{" "}
-                <select
-                  className="input"
-                  aria-label="对比题目"
-                  value={caseId}
-                  onChange={(e) => setCaseId(e.target.value)}
-                >
-                  {comparison.queue.map((q) => (
-                    <option key={q.case_id} value={q.case_id}>
-                      {q.title}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {comparison.queue.length > 1 && (
+                <label className={styles.meta}>
+                  当前题目{" "}
+                  <select
+                    className="input"
+                    aria-label="对比题目"
+                    value={caseId}
+                    onChange={(e) => setCaseId(e.target.value)}
+                  >
+                    {comparison.queue.map((q) => (
+                      <option key={q.case_id} value={q.case_id}>
+                        {q.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {caseId && (
                 <ComparisonCaseView
                   key={comparison.id + caseId + reportId}

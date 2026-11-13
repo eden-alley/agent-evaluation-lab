@@ -64,6 +64,13 @@ def test_external_stdio_reads_materials_and_submits_reports(comparison_env):
                 assert retry["id"] == lite["id"]
                 assert "case_analyses" not in lite
                 assert all("case_evidence" not in m for m in lite["metric_report"]["quality"])
+                await call("prepare_capability_review", {"comparison_id": plan["id"]})
+                from test_case_explanations import explained_document
+                narrated = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": explained_document()})
+                assert narrated["explanation_coverage"]["provided"] == 1
+                saved_case = await call("get_comparison_case", {"comparison_id": plan["id"], "case_id": CASE})
+                evidence = saved_case["latest_analysis"]["content"]["explanation"]["stages"][0]["evidence"][0]
+                assert evidence["event_id"] == 2 and "excerpt" not in evidence and "display_excerpt" not in evidence
         asyncio.run(workflow())
     finally:
         server.should_exit = True

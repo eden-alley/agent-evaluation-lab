@@ -24,13 +24,16 @@ export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
 }
 function Evidence({ material }: { material: Material }) {
   const raw = material.excerpt ?? "节选未保存，请按材料编号读取原件。";
-  const preview = evidencePreview(material.path, raw);
+  const preview =
+    material.display_excerpt ?? evidencePreview(material.path, raw);
   return (
     <div>
       <p className={styles.path}>
         {material.source === "baseline" ? "A · 原记录" : "B"}
         {material.is_simulation ? " · 模拟材料" : ""} · {material.path}
         {material.start_line ? ` · 第${material.start_line}行起` : ""}
+        {material.event_id ? ` · 事件${material.event_id}` : ""}
+        {material.check_id ? ` · 检查项 ${material.check_id}` : ""}
       </p>
       <pre>{preview}</pre>
       {preview !== raw && (
@@ -101,6 +104,19 @@ export function ComparisonCaseView({
     );
   if (!data) return <p role="status">正在读取本题材料…</p>;
   const analysis = hasFinalReport ? saved : data.latest_analysis;
+  const explanation = analysis?.content.explanation;
+  const focusLabel =
+    explanation?.focus === "baseline"
+      ? "A运行"
+      : explanation?.focus === "candidate"
+        ? "B运行"
+        : "A/B对照";
+  const explanationSimulated =
+    explanation?.focus === "baseline"
+      ? data.baseline?.is_simulation
+      : explanation?.focus === "candidate"
+        ? data.candidate?.is_simulation
+        : data.is_simulation;
   const task = data.baseline?.case ?? data.candidate?.case;
   const prompt = task?.task?.turns?.find((t) => t.role === "user")?.content;
   const catalog = [
@@ -126,11 +142,26 @@ export function ComparisonCaseView({
       <section className={styles.intro}>
         <span className={styles.tag}>任务背景 · {caseId}</span>
         <h2 style={{ marginTop: 12 }}>{task?.title ?? caseId}</h2>
-        {prompt && (
-          <p>
-            {prompt.split(/\n\s*\n/)[0].slice(0, 220)}
-            {prompt.split(/\n\s*\n/)[0].length > 220 ? "…" : ""}
-          </p>
+        {explanation ? (
+          <>
+            <p>{explanation.background}</p>
+            <p className={styles.explanationResult}>
+              <strong>本次结果：</strong>
+              {explanation.result.text}
+            </p>
+            <p className={styles.muted}>
+              {focusLabel}的过程讲解 ·{" "}
+              {explanationSimulated ? "包含模拟材料" : "依据已有真实归档"}
+              。原判定保持不变。
+            </p>
+          </>
+        ) : (
+          prompt && (
+            <p>
+              {prompt.split(/\n\s*\n/)[0].slice(0, 220)}
+              {prompt.split(/\n\s*\n/)[0].length > 220 ? "…" : ""}
+            </p>
+          )
         )}
         {task?.difficulty_basis && (
           <p className={styles.muted}>主要难点：{task.difficulty_basis}</p>
@@ -150,6 +181,45 @@ export function ComparisonCaseView({
           <p>两边任务缺失或内容不同，本题不直接判定能力升降。</p>
         )}
       </section>
+      {explanation ? (
+        <section className={styles.section} aria-label="任务过程讲解">
+          <h2>实际经过与关键反馈</h2>
+          <p className={styles.muted}>
+            以下为对保存材料的讲解，没有重新执行任务。点击依据可查看对应事件或检查项。
+          </p>
+          <div className={styles.list}>
+            {explanation.stages.map((stage, i) => (
+              <article className={styles.item} key={i}>
+                <h3>{stage.title}</h3>
+                <p style={{ whiteSpace: "pre-wrap" }}>{stage.text}</p>
+                <details className={styles.evidence}>
+                  <summary>查看本段依据（{stage.evidence.length}）</summary>
+                  {stage.evidence.map((m, index) => (
+                    <Evidence key={m.id + "-" + index} material={m} />
+                  ))}
+                </details>
+              </article>
+            ))}
+          </div>
+          <details className={styles.evidence}>
+            <summary>
+              查看结果判定依据（{explanation.result.evidence.length}）
+            </summary>
+            {explanation.result.evidence.map((m, index) => (
+              <Evidence key={m.id + "-" + index} material={m} />
+            ))}
+          </details>
+          {!!explanation.limitations.length && (
+            <p className={styles.muted}>
+              讲解范围与限制：{explanation.limitations.join("；")}
+            </p>
+          )}
+        </section>
+      ) : (
+        <p className={styles.muted}>
+          本题尚未提供过程讲解。以下展示已有原记录和程序统计，不代表已经深入分析了执行经过。
+        </p>
+      )}
       <section className={styles.section}>
         <h2>原始指标对照</h2>
         <p className={styles.muted}>
