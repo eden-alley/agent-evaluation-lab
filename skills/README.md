@@ -1,11 +1,12 @@
 # 共创 Skill
 
-本目录保存两份共创方法的源码与平台导入文件。
+本目录保存共创方法的源码与平台导入文件。
 
 | Skill | 方法版本 | 职责 |
 | --- | --- | --- |
 | [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
 | [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
+| [任务过程讲解](explain-agent-runs/SKILL.md) | 0.1.0 草稿 | 用普通话介绍题目、按关键进展讲述实际操作，解释结果与停止位置，附可回查的证据 |
 
 方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
 
