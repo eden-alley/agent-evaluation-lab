@@ -14,6 +14,7 @@ import {
   evidencePreview,
 } from "../lib/comparisons";
 import styles from "./comparison-workspace.module.css";
+import { TaskNarrative } from "./task-narrative";
 
 export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
   return (
@@ -22,15 +23,19 @@ export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
     </span>
   );
 }
-function Evidence({ material }: { material: Material }) {
+export function Evidence({ material }: { material: Material }) {
   const raw = material.excerpt ?? "节选未保存，请按材料编号读取原件。";
-  const preview = evidencePreview(material.path, raw);
+  const preview =
+    material.display_excerpt ?? evidencePreview(material.path, raw);
   return (
     <div>
       <p className={styles.path}>
         {material.source === "baseline" ? "A · 原记录" : "B"}
         {material.is_simulation ? " · 模拟材料" : ""} · {material.path}
         {material.start_line ? ` · 第${material.start_line}行起` : ""}
+        {material.event_id ? ` · 事件${material.event_id}` : ""}
+        {material.model_reply ? ` · 第${material.model_reply}次模型回复` : ""}
+        {material.check_id ? ` · 检查项 ${material.check_id}` : ""}
       </p>
       <pre>{preview}</pre>
       {preview !== raw && (
@@ -101,6 +106,19 @@ export function ComparisonCaseView({
     );
   if (!data) return <p role="status">正在读取本题材料…</p>;
   const analysis = hasFinalReport ? saved : data.latest_analysis;
+  const explanation = analysis?.content.explanation;
+  const focusLabel =
+    explanation?.focus === "baseline"
+      ? "A运行"
+      : explanation?.focus === "candidate"
+        ? "B运行"
+        : "A/B对照";
+  const explanationSimulated =
+    explanation?.focus === "baseline"
+      ? data.baseline?.is_simulation
+      : explanation?.focus === "candidate"
+        ? data.candidate?.is_simulation
+        : data.is_simulation;
   const task = data.baseline?.case ?? data.candidate?.case;
   const prompt = task?.task?.turns?.find((t) => t.role === "user")?.content;
   const catalog = [
@@ -126,11 +144,21 @@ export function ComparisonCaseView({
       <section className={styles.intro}>
         <span className={styles.tag}>任务背景 · {caseId}</span>
         <h2 style={{ marginTop: 12 }}>{task?.title ?? caseId}</h2>
-        {prompt && (
-          <p>
-            {prompt.split(/\n\s*\n/)[0].slice(0, 220)}
-            {prompt.split(/\n\s*\n/)[0].length > 220 ? "…" : ""}
-          </p>
+        {explanation ? (
+          <>
+            <p className={styles.muted}>
+              {focusLabel}的过程讲解 ·{" "}
+              {explanationSimulated ? "包含模拟材料" : "依据已有真实归档"}
+              。原判定保持不变。
+            </p>
+          </>
+        ) : (
+          prompt && (
+            <p>
+              {prompt.split(/\n\s*\n/)[0].slice(0, 220)}
+              {prompt.split(/\n\s*\n/)[0].length > 220 ? "…" : ""}
+            </p>
+          )
         )}
         {task?.difficulty_basis && (
           <p className={styles.muted}>主要难点：{task.difficulty_basis}</p>
@@ -150,6 +178,30 @@ export function ComparisonCaseView({
           <p>两边任务缺失或内容不同，本题不直接判定能力升降。</p>
         )}
       </section>
+      {explanation ? (
+        <section className={styles.section} aria-label="任务过程讲解">
+          <TaskNarrative
+            explanation={explanation}
+            renderEvidence={(items) => (
+              <details className={styles.evidence}>
+                <summary>查看依据（{items.length}）</summary>
+                {items.map((m, index) => (
+                  <Evidence key={m.id + "-" + index} material={m} />
+                ))}
+              </details>
+            )}
+          />
+          {!!explanation.limitations.length && (
+            <p className={styles.muted}>
+              讲解范围与限制：{explanation.limitations.join("；")}
+            </p>
+          )}
+        </section>
+      ) : (
+        <p className={styles.muted}>
+          本题保留自动统计与原判据，本次未展开过程讲解。
+        </p>
+      )}
       <section className={styles.section}>
         <h2>原始指标对照</h2>
         <p className={styles.muted}>

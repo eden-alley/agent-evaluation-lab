@@ -84,10 +84,10 @@
     },
     {
       "slug": "agent-version-comparison-workflow",
-      "method_version": "0.2.0",
+      "method_version": "0.9.0",
       "catalog": {
         "name": "Agent版本对比与开发方向",
-        "description": "程序准备已有归档和指标表，外部Agent用轻量Skill解释升降、缺陷及最多3条开发建议。v0.2.0离线试用。",
+        "description": "程序全量统计，外部Agent讲清关键题过程，正式整批评测才可附开发建议。v0.9.0离线试用。",
         "kind": "evaluation",
         "tags": [
           "版本对比",
@@ -97,16 +97,24 @@
         ]
       },
       "payload_file": "platform/agent-version-comparison-workflow.json",
-      "platform_content_hash": "e8622931b7c486d26a252cbabe4cdc349124d0c6a36f64a709f232be98492d0f",
-      "characters": 2583,
+      "platform_content_hash": "97bfc10a04f3fcfeba2c1bffb81982d7ea1a518cda550ef68a3b42ced05ec17c",
+      "characters": 4435,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "2e1d128f198e4eefb0692bd76c326ea110235f90b315577202f6aa6f91de9297"
+          "sha256": "88b9c1bcd4951a04092097a0d8ae7dd60e107301eb55dbaed406a60aeb990e18"
         },
         {
           "path": "references/engineering-retro.md",
-          "sha256": "ff9489c98d0ba29f4177a2b9fa4195e2df9dbca9953ac387b4ea8739e2505a1f"
+          "sha256": "17dcc67657b19f6083b6cc9c1c192cd6f8339fff01d10c3af9a22cbd7e85b6b8"
+        },
+        {
+          "path": "references/task-explanation-examples.md",
+          "sha256": "d555b18aaf1f62754a2b5478ce1f589b132e575c16aed87ca7ab123cc1e711d6"
+        },
+        {
+          "path": "references/task-explanation-evidence.json",
+          "sha256": "c6d78b134e31c6938ecc81f1a51723d479523021486d88a4f7254a13057594e8"
         }
       ]
     }

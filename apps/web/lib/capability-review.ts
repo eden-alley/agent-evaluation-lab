@@ -1,4 +1,5 @@
 import type { Outcome } from "./comparisons";
+import type { RepetitionMetric } from "./repetition";
 
 export interface MetricEvidence {
   material_id: string;
@@ -45,6 +46,7 @@ export interface CapabilityMetric {
   relative_change_pct?: number | null;
 }
 export interface MetricReport {
+  repetition?: RepetitionMetric;
   registry_version: string;
   quality: CapabilityMetric[];
   resources: CapabilityMetric[];

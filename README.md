@@ -1,26 +1,61 @@
 # Agent Evaluation Lab
 
-本地 Agent 评测工作台。用户在外部 Coding Agent 中工作，按需使用平台中已发布的 Skill，生成评测集草案和质量报告；平台负责校验、证据保存、人工审阅与版本确认。
+用于 Agent Harness 迭代的本地评测工作台。把真实运行归档整理成**指标升降、关键任务过程和可回查的证据**，帮助开发者决定下一步改什么，再通过后续评测验证。
 
-## 当前可用
+**真实评测 → 指标对比 → 关键题与证据 → 开发决策 → 下一轮评测**
 
-| 能力 | 实际状态 |
-| --- | --- |
-| 外部 Coding Agent 接入 | 官方 MCP stdio 工具，通过本地 API 读写平台；已用独立协议客户端验证 |
-| 项目与被测 Agent | 项目持久化、配置登记、路径静态检查 |
-| 内置 Skill | 目录、分类筛选、用户内容草稿、人工发布、不可变版本、按需读取 |
-| 共创 Skill 方法 | 已收录通用 Harness 评测 v0.1.2、结果判定与评分 v0.1.0；首版试用，原始包与平台导入内容见 [skills](skills/README.md) |
-| 业务 Skill | 用户可创建目录项并提供内容；平台不代写业务方法 |
-| 数据集质量交接 | 不可变草案、程序校验、外部报告、覆盖数、案例证据定位、人工确认固定版本 |
-| 评测执行、成绩、运行比较 | 执行器尚未接入；相关页面仍只有明确标记的示例 |
+## 用一张表，看清改善和退步
 
-平台不执行 Skill 文本、不调用模型生成用例。生成与语义检查由外部 Coding Agent 按用户要求完成；平台不会将外部报告自动认证为质量保证。
+下面是现有 20 道真实任务的两次运行对照。原任务整体完成从 **11/19 提升到 13/19**，代码独立回归从 **5/8 提升到 7/8**；与此同时，修改范围遵守从 **20/20 降到 16/20**。
 
-仓库保存可迁移的 Skill 文件；发布状态保存在本机数据库中。克隆后的实例须按 [Skill 同步说明](skills/README.md) 导入并经用户授权发布。原有 `dataset-design` 内置占位项仍未发布，不与已发布的“通用 Harness 评测”混为同一目录项。
+![真实20题归档的指标升降表：分别展示改善、退步、回归题和可比题数](docs/images/metric-changes.jpg)
+
+这张表把变化落到了具体题目：范围遵守的回归来自 U02、U03、U05、O06；整体完成的净进步中，也保留了 O01 的回归。点击指标可以查看对应题目与判据。
+
+每项保留自己的分母、排除题和适用范围；无效重复调用区分必要重复、确认无效和证据不足，资源消耗单独展示。上下文管理质量等尚未确认判据的维度保留“未评估”。
+
+> 这批对照中，A 每题最多 30 次模型请求，B 为 60 次。表格描述这两批归档的表现变化，不能单独归因于某项 Harness 改动。
+
+## 点进一道题，读懂它到底做了什么
+
+以 **U02：修复文本分块结果里的多余空格**为例。输入 `ab ab ab`，开启首尾空白清理后，后两段仍带着前导空格。任务要求修复源码、保留其他切分规则、运行指定测试并交付修改说明。
+
+![U02的真实过程讲解：第31次修复成功、后续继续调试，以及最终验收](docs/images/u02-task-process.jpg)
+
+这次运行用了 60 次模型回复。**第 31 次，原问题已经修好，两个核心源码文件此后没有再变。** 后半程仍在增加检查和排查自写脚本，直到次数耗尽。
+
+评测程序后来运行的五项独立检查全部通过，但 Agent 没有完成指定自测、没有交付报告，还留下 17 个未获准交付的临时文件，因此整题未通过。
+
+页面按回复区间说明动作、实际反馈和关键转折。每段的“查看依据”对应原始事件或检查项；原始轨迹与交付文件保留在展开入口。Agent 当时的自测与评测程序后来的独立检查分别呈现。
+
+## 正式整批评测，再决定下一步改什么
+
+正式多题评测可以附带整批开发建议。每条建议说明观察到的问题、为什么优先、下一步动作和验证方法，并能回到支撑它的任务与证据。
+
+![正式整批评测的开发建议：问题、优先理由、验证办法与题目证据](docs/images/batch-advice.jpg)
+
+这批归档保留了两条有依据、仍需验证的候选：
+
+- **结束前检查交付范围**：U05、O06 已完成主要功能，却因交付范围违规未通过，先核查已有验收入口是否能在结束前反馈这些问题。
+- **核查预算耗尽前的收尾提醒**：U02、U03 都用尽请求次数且未交付报告，先核对已有提醒是否覆盖这类路径，再决定改动。
+
+**1～3 题的小范围验证只看指标和关键过程。** 准备材料时明确选择正式整批评测，才允许附整批建议；没有可靠的新建议时可以直接提交。原因假设与已观察事实分开保存，开发动作由用户决定。
+
+## 这条流程怎样运行
+
+Agent 在外部 Harness 中执行真实任务，平台导入任务要求、工具轨迹、产物和原判定。程序负责全量统计与证据定位；外部 Agent 按随材料提供的轻量 Skill，解释退步、异常或支撑建议的关键题，再通过 MCP 或 CLI 一次提交报告。
+
+平台保存方法正文、版本和引用，检查材料是否对应，并将同一份任务讲解用于评测详情和对比页。原评分与历史报告保留，后续改动通过新的评测记录验证。
+
+此外，项目还提供 Agent 配置登记、数据集草案与版本确认、Skill 内容发布、archive/mock 复核记录，以及固定任务版本的保存交付物独立检查入口。具体范围见下方文档。
+
+> 截图来自本地真实归档，讲解与建议是对已有记录的离线整理；没有为展示调用模型或重跑评测。这些归档和本机数据库未随仓库发布，克隆后可以导入自己的运行记录。标记为“示例”或“模拟”的内容与真实归档分开展示。
 
 ## 本机启动
 
-需要 Node.js 22+、Python 3.11+。本轮使用 Windows、Node 24、Python 3.14 验证。首次安装：
+需要 **Node.js 22+、Python 3.11+**。当前验证环境为 Windows、Node 24、Python 3.14。
+
+在仓库根目录执行：
 
 ```powershell
 python -m venv .venv
@@ -29,58 +64,22 @@ cd apps/web
 npm ci
 npm run build
 cd ../..
+powershell -ExecutionPolicy Bypass -File ./start.ps1
 ```
 
-启动：`powershell -ExecutionPolicy Bypass -File ./start.ps1`。
-停止：`powershell -ExecutionPolicy Bypass -File ./stop.ps1`。
+打开 <http://127.0.0.1:3100/projects>。从“评测”查看运行记录，从“对比”查看指标与关键题，从“设置”取得外部 Agent 的 MCP 接入配置。
 
-- 工作区：http://127.0.0.1:3100/projects
-- 内置技能：http://127.0.0.1:3100/skills
-- 数据集：http://127.0.0.1:3100/datasets
-- 外部接入：http://127.0.0.1:3100/settings
-
-数据库为 `data/lab.sqlite3`；迁移自动保留已有项目和配置。启动日志在 `data/runtime`。SQLite 使用 WAL。Ubuntu 及现有 Harness 的 Linux 兼容性尚未验证。
-
-## 从外部 Coding Agent 使用
-
-1. 在网页创建项目，填写用户需求与评测目标。
-2. 共同设计 Skill 内容，在“内置技能”保存草稿并人工发布。没有发布版本时，外部工具不会将其列为可用能力。
-3. 在“设置”复制 MCP 启动字段，在外部客户端添加本地 stdio 服务。MCP 进程由客户端启动；平台 API 必须已启动。
-4. 外部 Agent 调用 `list_projects`、`get_project_context`，再通过 `list_skills` / `get_skill` 按需读取已发布方法。关键词筛选不是语义推荐，是否适用由 Agent 和用户判断。
-5. 调用 `get_submission_contract` 取得 JSON Schema，提交 `submit_dataset_draft`；生成来源以 `source.skills` 绑定已发布技能版本与哈希。
-6. 外部 Agent 提交 `submit_quality_report`；用户在网页查看检查数量、覆盖矩阵、问题与原文引用，确认或退回。
-
-Codex CLI 的接入命令（已核对本机 `codex mcp add --help`；这里不自动修改客户端全局配置）：
+停止服务：
 
 ```powershell
-$labRoot = (Get-Location).Path
-codex mcp add agent-evaluation-lab --env LAB_API_URL=http://127.0.0.1:8100 --env LAB_CLIENT_NAME=codex -- "$labRoot\.venv\Scripts\python.exe" "$labRoot\backend\run_mcp.py"
+powershell -ExecutionPolicy Bypass -File ./stop.ps1
 ```
 
-从本项目根目录运行，再按客户端要求重新加载 MCP 服务。其他客户端使用设置页的 `command`、`args`、`env` 字段。不会将模型凭据保存在平台配置中。
+技术栈为 Next.js / React、FastAPI、SQLite（WAL）和 MCP stdio。数据库位于 `data/lab.sqlite3`，运行日志位于 `data/runtime`，迁移自动保留已有数据。当前优先验证 Windows；保存交付物的独立检查使用 Windows 原生沙箱。
 
-MCP 只提供读取、草案和报告提交工具，不提供发布技能或确认数据集的工具。网页审阅是本机单人工作流，不是能阻止同用户任意本地脚本访问 HTTP API 的安全隔离。
+Skill 源码和平台导入包保存在 [skills](skills/README.md)。克隆仓库后，按文档导入并发布所需方法，再让外部 Agent 读取。
 
-## 文件责任与数据流
-
-| 文件或目录 | 责任 |
-| --- | --- |
-| `backend/lab/mcp_server.py`、`backend/run_mcp.py` | 标准 MCP 工具适配，通过 HTTP 调用业务接口 |
-| `backend/lab/integration.py` | 接入配置、项目上下文、实际工具请求记录 |
-| `backend/lab/skills.py` | 用户提供的技能内容、发布状态和版本引用 |
-| `backend/lab/quality_schemas.py` | 草案、来源、报告、证据与审阅合同 |
-| `backend/lab/quality_checks.py` | 确定性校验、规范化哈希、引用片段验证 |
-| `backend/lab/datasets.py`、`quality_routes.py` | 草案/报告存储、原子确认与不可变版本 |
-| `backend/lab/migrations` | 按版本迁移 SQLite，保留旧数据 |
-| `apps/web/components/connections.tsx`、`skills.tsx` | 接入与技能界面 |
-| `apps/web/components/dataset-workspace.tsx`、`quality-detail.tsx` | 项目隔离、报告审阅、案例证据与固定版本 |
-| `apps/web/lib/quality-api.ts`、`quality-types.ts` | 前端请求与数据合同 |
-
-外部 Agent → MCP stdio → FastAPI → SQLite。浏览器 → Next.js 同源转发 → 同一 FastAPI。MCP 不直接写数据库。程序校验与外部语义判断分开显示；来源哈希只证明引用对应版本，不证明实际执行遵循了方法。
-
-新增 `mcp==2.3.0` 使用[官方 Python SDK](https://github.com/modelcontextprotocol/python-sdk)实现协议与客户端验证；`httpx` 用于本地桥接。传递依赖已写入 `backend/requirements-lock.txt`。没有新增模型 SDK 或分布式组件。
-
-## 验证
+## 程序回归测试
 
 ```powershell
 cd backend
@@ -91,4 +90,13 @@ npm run typecheck
 npm run build
 ```
 
-完整结果见 `VERIFICATION.md`。浏览器验收脚本为 `tests/ui_quality_smoke.py`；必须对独立测试服务运行，配置 `LAB_TEST_WORKDIR`（临时产物目录）、`LAB_UI_API_URL`、`LAB_UI_BASE_URL`，不得指向真实工作区。脚本会创建明确标注的测试项目和测试内容。
+## 更多资料
+
+| 文档 | 内容 |
+| --- | --- |
+| [外部运行导入](docs/EXTERNAL_RUN_IMPORT.md) | 真实归档、文件清单、哈希与读取接口 |
+| [轻量能力分析](docs/CAPABILITY_REVIEW.md) | 指标口径、关键题讲解、正式整批建议与 CLI / MCP 使用 |
+| [外部 Agent 接入](docs/EXTERNAL_AGENT.md) | MCP 连接、数据集草案、报告提交与人工确认 |
+| [保存交付物的独立检查](docs/SAVED_DELIVERY_CHECKS.md) | 固定检查程序、历史记录及原评分的边界 |
+| [Judge 的依据与实现](docs/JUDGE_EVIDENCE.md) | archive/mock 复核、规则判定与人工追加复核 |
+| [Skill 文件与同步](skills/README.md) | 方法正文、导入包、发布状态和版本引用 |

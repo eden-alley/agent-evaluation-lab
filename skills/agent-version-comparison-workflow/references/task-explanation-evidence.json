@@ -1,0 +1,576 @@
+{
+  "run_id": "harness-formal20-current-bailian-20261112",
+  "completed_at": "2026-11-12T09:41:54.102648+00:00",
+  "case_count": 20,
+  "counts": {
+    "pass": 13,
+    "fail": 6,
+    "unknown": 1,
+    "valid": 19
+  },
+  "counting": "reply numbers count model_response events; one reply may contain multiple actions",
+  "run_json_sha256": "28505d79595cbcba728743d6a6a793e88bba9bbbb40b6d3c7d77fc7de3560d8c",
+  "cases": [
+    {
+      "id": "U02",
+      "title": "修复文本分块结果里的多余空格",
+      "task": "给分块器传入 `ab ab ab`，按空格分块，最多 3 字符，已设置去首尾空白。结果里后两块仍有前导空格，用户据此比较关键词时得出错误结果。\n\n用当前本地 LangChain 文本分块器的隔离副本复现。让去首尾空白覆盖这里的分块结果，保留关闭清理时的行为，以及正常合并与重叠规则。在 Windows 下执行 `run-tests.cmd`，交付源码改动和 report.md。保持现有测试原样。",
+      "requests": 60,
+      "seconds": 225.89,
+      "verdict": "fail",
+      "checks": [
+        {
+          "id": "scope",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "public",
+          "value": 1,
+          "automatic_value": 1,
+          "reviewed": false
+        },
+        {
+          "id": "independent",
+          "value": 1,
+          "automatic_value": 1,
+          "reviewed": false
+        },
+        {
+          "id": "agent_tested_final_change",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "delivery",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "localization",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        }
+      ],
+      "source_hashes": {
+        "raw/U02/events.jsonl": "1582bfe6672937cf64d01413b7d1791443d8c8c7f8ea746e7cd607517a3c1e82",
+        "raw/U02/grade/test-results.json": "acc69fd39e6a28951bf9ee8116ffd9b9e87fbf6deac5480227149d995fb39ada"
+      },
+      "selected_events": [
+        {
+          "event_id": 28,
+          "reply": 7,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 56,
+          "reply": 15,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nValueError: Got a larger chunk overlap (200) than chunk size (20), should be smaller.",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 65,
+          "reply": 18,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nValueError: Got a larger chunk overlap (200) than chunk size (10), should be smaller.",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 68,
+          "reply": 19,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nbug: rct ' ' size3 strip = ['ab', ' ab', ' ab']\nbug: rct ' ' size3 nostrip = ['ab', ' ab', ' ab']\nmerge: nostrip size10 = ['hello', ' world foo', ' bar baz']",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 71,
+          "reply": 20,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nbug: rct ' ' size3 strip = ['ab', ' ab', ' ab']\nbug: rct ' ' size3 nostrip = ['ab', ' ab', ' ab']\nmerge: nostrip size10 = ['hello', ' world foo', ' bar baz']",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 86,
+          "reply": 25,
+          "type": "tool_result",
+          "tool": "edit_file",
+          "ok": false,
+          "code": "tool_unavailable",
+          "message": "不存在工具 'edit_file'",
+          "excerpt": "",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 92,
+          "reply": 27,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 103,
+          "reply": 30,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 106,
+          "reply": 31,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nbug: rct ' ' size3 strip = ['ab', 'ab', 'ab']\nbug: rct ' ' size3 nostrip = ['ab', ' ab', ' ab']\nmerge: nostrip size10 = ['hello', ' world foo', ' bar baz']",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 117,
+          "reply": 34,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "命令非零退出",
+          "excerpt": "[exit 1]\nValueError: Got a larger chunk overlap (200) than chunk size (3), should be smaller.",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 120,
+          "reply": 35,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "命令非零退出",
+          "excerpt": "[exit 1]\nTypeError: langchain_text_splitters.character.RecursiveCharacterTextSplitter() got multiple values for keyword argument 'chunk_overlap'",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 123,
+          "reply": 36,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nspace/size3/strip -> chunks = ['ab', 'ab', 'ab']\nspace/size3/nostrip = ['ab', ' ab', ' ab']\nchar/space/size3/nostrip = ['ab', 'ab', 'ab']\noversized/nostrip = ['ab ', ' ', ' cdefg']",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 141,
+          "reply": 42,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\njoin nostrip: 'ab ab'",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 174,
+          "reply": 53,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\ntrim nostrip: ab\njoin nostrip ab ab: 'ab ab'",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 183,
+          "reply": 56,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 194,
+          "reply": 60,
+          "type": "tool_call",
+          "tool": "read_file",
+          "arguments": {
+            "end_line": 220,
+            "path": "src/langchain_text_splitters/base.py",
+            "start_line": 204
+          },
+          "arguments_are_partial": true
+        },
+        {
+          "event_id": 196,
+          "reply": 60,
+          "type": "final_response",
+          "stop_reason": "max_steps",
+          "excerpt": "（达到最大步数，已停止）",
+          "excerpt_is_partial": true
+        }
+      ],
+      "report_in_final_file_list": false,
+      "source_unchanged_from_reply": 31,
+      "snapshots_verified": 63,
+      "extra_deliverables_count": 17
+    },
+    {
+      "id": "U03",
+      "title": "修复等待卡片掉线后会话一直卡住",
+      "task": "DeepTutor 用户在一个问答卡片填完答案后点击提交。此前执行任务的 worker 已退出，卡片仍然卡在等待输入，同一会话也无法开始下一轮。请修复这份隔离快照。\n\n没有有效租约的旧等待任务应在拒绝回复时进入可重试的 worker_lost 失败状态，持久化并发布 error、done 事件，同一会话随后能开始下一轮。重复提交不能重发终止事件。有效租约应继续接收转发，已完成历史应保持原样。用 run-check.cmd 复现并验证，交付代码和 report.md。保留已有测试和无关行为；可新增回归测试，清理临时文件。",
+      "requests": 60,
+      "seconds": 432.03,
+      "verdict": "fail",
+      "checks": [
+        {
+          "id": "scope",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "report",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "public",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "independent",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "agent_tested_final",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        }
+      ],
+      "source_hashes": {
+        "raw/U03/events.jsonl": "bcdbafcb343b4289a0bface147c179ca3af489f312aed91a378e97774145e00f",
+        "raw/U03/grade/test-results.json": "033bb7add8e31d7f55fee03a3ee645f2fc1211de0b984fa8460d11aea6caba2a"
+      },
+      "selected_events": [
+        {
+          "event_id": 35,
+          "reply": 8,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nAssertionError: 'waiting_input' != 'failed'\nRan 1 test in 0.177s\nFAILED (failures=1)",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 130,
+          "reply": 37,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 136,
+          "reply": 39,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nAssertionError: True is not false\nRan 1 test in 0.189s\nFAILED (failures=1)",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 154,
+          "reply": 45,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 159,
+          "reply": 46,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nAssertionError: True is not false\nRan 1 test in 0.190s\nFAILED (failures=1)",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 165,
+          "reply": 48,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "命令非零退出",
+          "excerpt": "[exit 1]\nModuleNotFoundError: No module named 'loguru'",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 174,
+          "reply": 51,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "[超时] 命令执行超过 30 秒，已终止。",
+          "excerpt": "",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 186,
+          "reply": 55,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "[超时] 命令执行超过 120 秒，已终止。",
+          "excerpt": "",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 198,
+          "reply": 59,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "命令非零退出",
+          "excerpt": "[exit 1]\nrunning\nTimeout (0:00:25)!",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 200,
+          "reply": 60,
+          "type": "tool_call",
+          "tool": "write_file",
+          "arguments": {
+            "content": "import asyncio\nimport os\nfrom pathlib import Path\nimport sys\nimport tempfile\nfrom types import SimpleNamespace\n\nsys.path.insert(0, str(Path(__file__).resolve().",
+            "path": "dbg.py"
+          },
+          "arguments_are_partial": true
+        },
+        {
+          "event_id": 202,
+          "reply": 60,
+          "type": "final_response",
+          "stop_reason": "max_steps",
+          "excerpt": "（达到最大步数，已停止）",
+          "excerpt_is_partial": true
+        }
+      ],
+      "report_in_final_file_list": false,
+      "observed_code_excerpt": "        if await self.coordinator.get_lease(turn_id) is None:\n            return await self._reap_unowned_live_turn(turn_id)\n            return True\n        lease = await self.coordinator.get_lease(turn_id)\n            return await self._reap_unowned_live_turn(turn_id)\n            return True"
+    },
+    {
+      "id": "U05",
+      "title": "为本机 CLI 增加只读运行限制查询",
+      "task": "终端用户启动 Agent 后，希望用 /limits 查询这个会话实际生效的步数、Token 和时间限制。请在这份 agent-minimal-loop 冻结副本的 CLI 实现。\n\n输出分别用 steps=、tokens=、time_seconds= 开头，每项一行。关闭输出 off；默认的非关闭值显示数值加 (default)，显式设置的非关闭值显示数值加 (custom)，包括显式设置恰好等于默认值。时间以秒显示，整数秒可显示为整数。显示启动时实际使用的值，进程环境后续变化不改写这些值。命令只读，无模型请求或会话落盘，保留 /auto 与普通对话。用 run-check.cmd 验证（脚本使用离线替身）。交付源码及 report.md，保留已有测试；可新增回归测试，清理临时文件。",
+      "requests": 36,
+      "seconds": 151.42,
+      "verdict": "fail",
+      "checks": [
+        {
+          "id": "scope",
+          "value": 0,
+          "automatic_value": 0,
+          "reviewed": false
+        },
+        {
+          "id": "report",
+          "value": 1,
+          "automatic_value": 1,
+          "reviewed": false
+        },
+        {
+          "id": "public",
+          "value": 1,
+          "automatic_value": 1,
+          "reviewed": false
+        },
+        {
+          "id": "independent",
+          "value": 1,
+          "automatic_value": 1,
+          "reviewed": false
+        },
+        {
+          "id": "agent_tested_final",
+          "value": 1,
+          "automatic_value": 0,
+          "reviewed": true
+        }
+      ],
+      "source_hashes": {
+        "raw/U05/events.jsonl": "80151489c8b398e9ac8e7159961f07eee945732080e1e53d3cdfb6d8a8c9f96f",
+        "raw/U05/grade/test-results.json": "92c69347c4e7eab52c9ebb3364bf000ebcc88cd4cf3136e17a5a334fd000dcb8"
+      },
+      "selected_events": [
+        {
+          "event_id": 41,
+          "reply": 10,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": false,
+          "code": "execution_error",
+          "message": "命令非零退出",
+          "excerpt": "[exit 1]\nAssertionError: 0 != 1 :    [对话 tokens] 输入=50 输出=3 合计=53 | 本次运行累计：输入=50 输出=3 合计=53\nRan 1 test in 0.013s\nFAILED (failures=1)",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 51,
+          "reply": 13,
+          "type": "tool_call",
+          "tool": "write_file",
+          "arguments": {
+            "path": "cli.py",
+            "content": "\"\"\"终端入口：本机初始化、命令交互与会话保存。\"\"\"\nimport os\nimport math\nfrom contextlib import nullcontext\nfrom uuid import uuid4\nfrom urllib.parse import urlsplit\n\nfrom agent import"
+          },
+          "arguments_are_partial": true
+        },
+        {
+          "event_id": 61,
+          "reply": 16,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nRan 1 test in 0.005s\nOK",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 66,
+          "reply": 18,
+          "type": "tool_call",
+          "tool": "write_file",
+          "arguments": {
+            "content": "from contextlib import redirect_stdout\nfrom decimal import Decimal\nfrom io import StringIO\nimport os\nfrom pathlib import Path\nimport re\nimport sys\nfrom tempfile",
+            "path": "tests/test_contract.py"
+          },
+          "arguments_are_partial": true
+        },
+        {
+          "event_id": 70,
+          "reply": 19,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nRan 7 tests in 0.026s\nOK",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 91,
+          "reply": 26,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 94,
+          "reply": 27,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 97,
+          "reply": 28,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 100,
+          "reply": 29,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nRan 7 tests in 0.030s\nOK",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 112,
+          "reply": 33,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 114,
+          "reply": 34,
+          "type": "tool_call",
+          "tool": "write_file",
+          "arguments": {
+            "content": "# /limits 终端命令实现报告\n\n## 目标\n\n终端用户启动 Agent 后，用 `/limits` 查询**本次会话实际生效**的步数、Token 和时间限制。\n\n## 改动\n\n### `cli.py`\n\n1. **新增 `limit_setting_with_origin(name, default, par",
+            "path": "report.md"
+          },
+          "arguments_are_partial": true
+        },
+        {
+          "event_id": 118,
+          "reply": 35,
+          "type": "tool_result",
+          "tool": "run_shell",
+          "ok": true,
+          "excerpt": "[exit 0]\nRan 7 tests in 0.028s\nOK",
+          "excerpt_is_partial": true
+        },
+        {
+          "event_id": 121,
+          "reply": 36,
+          "type": "final_response",
+          "stop_reason": "end_turn",
+          "excerpt": "已完成 `/limits` 命令的实现，并通过 `run-check.cmd` 验证（7 项测试全部通过）。\n\n## 实现（`cli.py`）\n\n- **`limit_setting_with_origin()`**：在原有校验基础上记录来源。环境变量存在即为 `custom`，不存在为 `default`；**显式设置恰好等于默认值也算 `custom`**。\n- **`create_agent()` 保存启动快照** `agent.limit_snapshot`：启动时读取一次，之后进程环境变化不改写显示值（快照缺失时回退到实例当前值）。\n- **`handle_limits()` / `format_limit()`**：逐行输出 `steps=`、`tokens=`、`time_seconds=`；关闭值显示 `off`，非关闭值为 `数值 (default|custom)`；时间",
+          "excerpt_is_partial": true
+        }
+      ],
+      "report_in_final_file_list": true
+    }
+  ],
+  "reviewer_check": {
+    "kind": "separate_local_recheck",
+    "model_requests": 0,
+    "question": "The other splitting mode with whitespace cleanup disabled already produced this output in the original source.",
+    "results": {
+      "original": [
+        "ab",
+        "ab",
+        "ab"
+      ],
+      "delivered": [
+        "ab",
+        "ab",
+        "ab"
+      ]
+    }
+  }
+}

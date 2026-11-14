@@ -5,7 +5,30 @@ import {
   affectedCases,
   demonstration,
   evidencePreview,
+  reviewScopeFor,
+  developmentAdvice,
 } from "../lib/comparisons";
+import type { ComparisonReport } from "../lib/comparisons";
+
+test("small selections cannot choose batch advice and size alone never selects formal", () => {
+  for (const count of [1, 2, 3])
+    assert.equal(reviewScopeFor(count, "formal_batch"), "focused");
+  assert.equal(reviewScopeFor(20), "focused");
+  assert.equal(reviewScopeFor(20, "formal_batch"), "formal_batch");
+});
+
+test("development advice is batch-only while saved legacy reports keep their content", () => {
+  const r = {
+    recommendations: [{ title: "batch recommendation" }],
+    review_policy: { recommendations_allowed: false },
+  } as ComparisonReport;
+  assert.deepEqual(developmentAdvice(r), []);
+  r.review_policy!.recommendations_allowed = true;
+  assert.equal(developmentAdvice(r)[0].title, "batch recommendation");
+  delete r.review_policy;
+  assert.equal(developmentAdvice(r).length, 1);
+  assert.deepEqual(developmentAdvice(null), []);
+});
 
 test("unknown or invalid resource values never become measured zeros", () => {
   assert.equal(metricDifference(null, 0), null);

@@ -93,6 +93,16 @@ def get_trace(run_id: str, case_id: str, request: Request):
     return {'source': source, 'groups': groups}
 
 
+@router.get('/{run_id}/cases/{case_id}/explanation')
+def get_explanation(run_id: str, case_id: str, request: Request):
+    folder, run = read_run(request, run_id)
+    if not any(c['id'] == case_id for c in run.get('cases', [])):
+        raise QualityError('CASE_NOT_FOUND', '找不到该题。', 404)
+    from .run_explanations import for_run
+    with connect(request.app.state.db_path) as conn:
+        return for_run(conn, folder, run_id, case_id)
+
+
 @router.get('/{run_id}/artifact')
 def get_artifact(run_id: str, path: str, request: Request, download: bool = False):
     folder, _ = read_run(request, run_id)

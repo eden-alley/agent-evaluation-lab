@@ -25,7 +25,7 @@ def test_registry_keeps_gains_and_losses_and_explicit_unknown_dimensions():
     assert (scope["before"], scope["after"], scope["paired_cases"]) == (2, 2, 3)
     assert scope["direction"] == "mixed"
     assert scope["improved_cases"] == ["one"] and scope["regressed_cases"] == ["two"]
-    assert {m["id"] for m in table["unassessed"]} >= {"context_quality", "useless_repetition", "conciseness", "recovery_quality"}
+    assert {m["id"] for m in table["unassessed"]} >= {"context_quality", "cross_tool_repetition", "conciseness", "recovery_quality"}
     assert table["coverage"]["unassessed"] >= 4
 
 

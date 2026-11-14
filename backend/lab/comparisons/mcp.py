@@ -1,5 +1,6 @@
 """Compact external workflow tools; evidence bodies are fetched only on demand."""
 from urllib.parse import quote, urlencode
+from typing import Literal
 from .schemas import ComparisonInput, CaseAnalysisInput, FinalReportInput
 from .review_schemas import Analysis
 from .review import submission, analyst_materials
@@ -10,6 +11,12 @@ def compact_analysis(value):
     value["content"]["observations"] = [{**o, "evidence": [
         {k: v for k, v in e.items() if k not in ("excerpt", "content")} for e in o["evidence"]]}
         for o in value["content"]["observations"]]
+    if value["content"].get("explanation"):
+        explanation = value["content"]["explanation"]
+        def compact_paragraph(p):
+            return {**p, "evidence": [{k: v for k, v in e.items() if k not in ("excerpt", "display_excerpt", "content")} for e in p["evidence"]]}
+        value["content"]["explanation"] = {**explanation, "stages": [compact_paragraph(p) for p in explanation["stages"]],
+                                          "result": compact_paragraph(explanation["result"])}
     return value
 
 
@@ -20,6 +27,13 @@ def compact_report(value):
         result["metric_report"] = {**table, **{group: [
             {k: v for k, v in metric.items() if k != "case_evidence"} for metric in table[group]]
             for group in ("quality", "resources")}}
+        if table.get("repetition"):
+            p=table["repetition"]
+            result["metric_report"]["repetition"]={**p,"cases":[{**r,**{s:{k:v for k,v in r[s].items() if k!='items'} if r[s] else None
+                                                   for s in ('baseline','candidate')}} for r in p['cases']]}
+    result["recommendations"] = [{**r, **({"evidence": [
+        {k: v for k, v in e.items() if k not in ("excerpt", "display_excerpt", "content")}
+        for e in r["evidence"]]} if r.get("evidence") else {})} for r in result["recommendations"]]
     return result
 
 
@@ -85,17 +99,14 @@ def register(server, call, read, write):
         return await call("submit_comparison_report", "POST", route(comparison_id) + "/reports", report.model_dump(), projection=compact_report)
 
     @server.tool(annotations=write)
-    async def prepare_capability_review(comparison_id: str):
-        """程序校验原件并准备已有判据、指标升降和材料目录；不运行模型或评分器。之后仅需提交一份简短分析。"""
-        checked = await call("prepare_capability_review", "POST", route(comparison_id) + "/verify", timeout=120)
-        if checked.is_error:
-            return checked
-        if checked.structured_content["source_state"] != "unchanged":
-            raise ValueError("原归档变化，请重新绑定材料；不能据此提交新的有效分析。")
+    async def prepare_capability_review(comparison_id: str, explain_case_ids: list[str] | None = None,
+                                       review_scope: Literal['focused', 'formal_batch'] = 'focused'):
+        """提供固定Skill、全量指标与关键题。默认小范围验证；formal_batch且超过3题才可附整批开发建议。不运行模型或评分器。"""
         def keep_packet(value):
             prepared[comparison_id] = value
             return analyst_materials(value)
-        return await call("prepare_capability_review", "GET", route(comparison_id) + "/review-materials", projection=keep_packet, timeout=120)
+        return await call("prepare_capability_review", "POST", route(comparison_id) + "/review-materials",
+                          {"explain_case_ids": explain_case_ids, 'review_scope': review_scope}, projection=keep_packet, timeout=120)
 
     @server.tool(annotations=read)
     async def list_capability_materials(comparison_id: str, case_id: str, side: str, query: str = "", offset: int = 0, limit: int = 50):
@@ -111,7 +122,7 @@ def register(server, call, read, write):
 
     @server.tool(annotations=write)
     async def submit_capability_review(comparison_id: str, analysis: Analysis):
-        """一次提交简短分析；程序管理固定材料、并发修订和逐题引用。相同材料与分析可安全取回同一回执。"""
+        """一次提交关键题讲解，开发建议可省略或为空且不需说明原因；程序保留全量指标、解析引用并管理修订，相同输入取回同一回执。"""
         if comparison_id not in prepared:
             raise ValueError("请先在本次连接调用 prepare_capability_review；程序需要保存的材料包才能安全提交。")
         return await call("submit_capability_review", "POST", route(comparison_id) + "/review",

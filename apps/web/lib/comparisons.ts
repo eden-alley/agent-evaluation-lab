@@ -1,5 +1,11 @@
 import { request } from "./api";
 import type { MetricReport } from "./capability-review";
+import type {
+  SkillDelivery,
+  OutputChecks,
+  ReviewPolicy,
+  ReviewScope,
+} from "./skill-delivery";
 export type Outcome =
   | "improved"
   | "regressed"
@@ -32,6 +38,18 @@ export interface Material {
   line_count?: number;
   is_simulation?: boolean;
   truncated?: boolean;
+  display_excerpt?: string;
+  event_id?: number;
+  model_reply?: number;
+  check_id?: string;
+}
+export interface CaseExplanation {
+  case_id: string;
+  focus: "baseline" | "candidate" | "comparison";
+  background: string;
+  stages: { title: string; text: string; evidence: Material[] }[];
+  result: { text: string; evidence: Material[] };
+  limitations: string[];
 }
 export interface Observation {
   id: string;
@@ -49,7 +67,11 @@ export interface CaseAnalysis {
   case_id: string;
   revision: number;
   created_at: string;
-  content: { summary: string; observations: Observation[] };
+  content: {
+    summary: string;
+    observations: Observation[];
+    explanation?: CaseExplanation;
+  };
 }
 export interface Analyst {
   kind: string;
@@ -91,6 +113,7 @@ export interface Recommendation {
   refs: ObservationRef[];
   known_mechanism?: string;
   gap?: string;
+  evidence?: Material[];
 }
 export interface ComparisonReport {
   id: string;
@@ -116,6 +139,33 @@ export interface ComparisonReport {
     advice: string;
   };
   workflow?: Comparison["workflow"];
+  skill_delivery?: SkillDelivery;
+  output_checks?: OutputChecks;
+  no_recommendation_reason?: string | null;
+  review_policy?: ReviewPolicy;
+  explanation_coverage?: {
+    provided: number;
+    planned: number;
+    case_ids: string[];
+    mode?: "key_cases";
+    total_cases?: number;
+    candidate_case_ids?: string[];
+    not_explained_case_ids?: string[];
+    unexpanded_candidate_case_ids?: string[];
+  };
+}
+export function reviewScopeFor(
+  caseCount: number,
+  requested: ReviewScope = "focused",
+): ReviewScope {
+  return caseCount > 3 ? requested : "focused";
+}
+export function developmentAdvice(
+  report: ComparisonReport | null,
+): Recommendation[] {
+  return report?.review_policy?.recommendations_allowed === false
+    ? []
+    : (report?.recommendations ?? []);
 }
 export interface Comparison {
   id: string;
