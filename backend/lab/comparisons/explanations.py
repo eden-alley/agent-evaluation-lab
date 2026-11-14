@@ -73,6 +73,37 @@ def event_preview(event):
     return "\n".join(parts)[:12000]
 
 
+def event_records(request, snapshot, material, cache):
+    if material["id"] not in cache:
+        if material["kind"] != "archive" or not material["path"].endswith(".jsonl"):
+            raise QualityError("EXPLANATION_EVENT_NOT_FOUND", "事件引用必须指向本题已归档的JSONL记录。", 422)
+        source = snapshot[material["source"]]
+        folder = Path(request.app.state.db_path).parent / "evaluation-runs" / source["run_id"]
+        _, _, raw = read_artifact(folder.resolve(), material["path"], max_bytes=32 * 1024 * 1024)
+        if materials.sha(raw) != material["sha256"]:
+            raise QualityError("EVIDENCE_CHANGED", "事件原件与固定快照不同。", 409)
+        try:
+            indexed, lines, replies, reply = {}, {}, {}, 0
+            for n, line in enumerate(raw.decode("utf-8-sig").splitlines(), 1):
+                if not line.strip():
+                    continue
+                event = json.loads(line)
+                if not isinstance(event, dict):
+                    continue
+                event.pop("files", None)
+                if event.get('type') == 'model_response':
+                    reply += 1
+                replies[n] = reply
+                lines[n] = event
+                identity = event.get("event_id")
+                if type(identity) is int:
+                    indexed.setdefault(identity, []).append((n, event))
+            cache[material["id"]] = {"ids": indexed, "lines": lines, "replies": replies}
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise QualityError("INVALID_EXPLANATION_EVENTS", "事件记录无法解析，请核对原件。", 422) from exc
+    return cache[material["id"]]
+
+
 def resolve_reference(request, snapshot, cid, pointer, cache):
     try:
         material = locate(snapshot, cid, pointer.side, pointer.path)
@@ -81,30 +112,7 @@ def resolve_reference(request, snapshot, cid, pointer, cache):
     start, count = pointer.start_line, pointer.line_count
     selected_event = None
     if pointer.event_id is not None:
-        if material["id"] not in cache:
-            if material["kind"] != "archive" or not material["path"].endswith(".jsonl"):
-                raise QualityError("EXPLANATION_EVENT_NOT_FOUND", "事件引用必须指向本题已归档的JSONL记录。", 422)
-            source = snapshot[pointer.side]
-            folder = Path(request.app.state.db_path).parent / "evaluation-runs" / source["run_id"]
-            _, _, raw = read_artifact(folder.resolve(), material["path"], max_bytes=32 * 1024 * 1024)
-            if materials.sha(raw) != material["sha256"]:
-                raise QualityError("EVIDENCE_CHANGED", "事件原件与固定快照不同。", 409)
-            try:
-                indexed = {}
-                for n, line in enumerate(raw.decode("utf-8-sig").splitlines(), 1):
-                    if not line.strip():
-                        continue
-                    event = json.loads(line)
-                    if not isinstance(event, dict):
-                        continue
-                    event.pop("files", None)  # The raw, hashed excerpt remains available separately.
-                    identity = event.get("event_id")
-                    if type(identity) is int:
-                        indexed.setdefault(identity, []).append((n, event))
-                cache[material["id"]] = indexed
-            except (ValueError, UnicodeDecodeError) as exc:
-                raise QualityError("INVALID_EXPLANATION_EVENTS", "事件记录无法解析，请核对原件。", 422) from exc
-        matches = cache[material["id"]].get(pointer.event_id, [])
+        matches = event_records(request, snapshot, material, cache)["ids"].get(pointer.event_id, [])
         if len(matches) != 1:
             raise QualityError("EXPLANATION_EVENT_NOT_FOUND", "事件编号不存在或重复，不能作为明确依据。", 422)
         start, selected_event = matches[0]
@@ -118,9 +126,16 @@ def resolve_reference(request, snapshot, cid, pointer, cache):
             raise QualityError("EXPLANATION_CHECK_NOT_FOUND", "检查项编号不存在或重复。", 422)
         location = metrics.section_ref(material, check_id=pointer.check_id)
         start, count = location["start_line"], location["line_count"]
+    elif material["kind"] == "archive" and PurePosixPath(material["path"]).name == "events.jsonl" and count == 1:
+        selected_event = event_records(request, snapshot, material, cache)["lines"].get(start)
     found = materials.excerpt(request, snapshot, cid, material["id"], start, count)
     if pointer.event_id is not None:
-        found.update(event_id=pointer.event_id, display_excerpt=event_preview(selected_event))
+        found["event_id"] = pointer.event_id
+    if selected_event is not None:
+        found["display_excerpt"] = event_preview(selected_event)
+        reply = event_records(request, snapshot, material, cache)['replies'].get(start, 0)
+        if reply:
+            found['model_reply'] = reply
     if pointer.check_id is not None:
         found["check_id"] = pointer.check_id
     return found

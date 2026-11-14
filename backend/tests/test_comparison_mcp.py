@@ -52,21 +52,23 @@ def test_external_stdio_reads_materials_and_submits_reports(comparison_env):
                 detail = await call("get_comparison", {"comparison_id": plan["id"]})
                 assert detail["progress"]["collection_complete"] is True
                 packet = await call("prepare_capability_review", {"comparison_id": plan["id"]})
-                assert packet["metric_report"]["registry_version"] == "saved-checks-0.2.0"
+                assert packet["metric_report"]["registry_version"] == "saved-checks-0.3.0"
                 friendly = await call("read_capability_material", {"comparison_id": plan["id"], "case_id": CASE,
                     "side": "baseline", "path": "events.jsonl", "line_count": 5})
                 assert "AssertionError" in friendly["excerpt"]
-                from test_capability_review import document
-                lite = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": document()})
+                from test_skill_delivery import complete_document
+                assert packet["skill_delivery"]["skill"]["content"] == "Read the paired evidence and report limitations."
+                lite = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": complete_document()})
                 assert lite["metric_report"]["coverage"]["unassessed"] >= 4
                 assert lite["analysis_origin"]["kind"] == "external_agent"
-                retry = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": document()})
+                assert lite["output_checks"]["status"] == "passed"
+                assert "excerpt" not in lite["recommendations"][0]["evidence"][0]
+                retry = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": complete_document()})
                 assert retry["id"] == lite["id"]
                 assert "case_analyses" not in lite
                 assert all("case_evidence" not in m for m in lite["metric_report"]["quality"])
                 await call("prepare_capability_review", {"comparison_id": plan["id"]})
-                from test_case_explanations import explained_document
-                narrated = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": explained_document()})
+                narrated = await call("submit_capability_review", {"comparison_id": plan["id"], "analysis": complete_document()})
                 assert narrated["explanation_coverage"]["provided"] == 1
                 saved_case = await call("get_comparison_case", {"comparison_id": plan["id"], "case_id": CASE})
                 evidence = saved_case["latest_analysis"]["content"]["explanation"]["stages"][0]["evidence"][0]

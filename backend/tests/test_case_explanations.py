@@ -22,6 +22,58 @@ def explained_document():
     return {**document(), "case_explanations": [explanation()]}
 
 
+def test_model_reply_locator_counts_responses_not_events(comparison_env):
+    import hashlib
+    client, folder, _ = comparison_env
+    records = [{'type': 'model_response', 'event_id': 10},
+               {'type': 'tool_call', 'event_id': 21},
+               {'type': 'model_response', 'event_id': 30},
+               {'type': 'tool_result', 'event_id': 41, 'ok': True, 'data': 'fixed'}]
+    raw = ''.join(json.dumps(row) + '\n' for row in records).encode()
+    (folder / 'events.jsonl').write_bytes(raw)
+    descriptor = {'path': 'events.jsonl', 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
+    run = json.loads((folder / 'run.json').read_text(encoding='utf-8'))
+    run['cases'][0]['files'] = [descriptor]
+    (folder / 'run.json').write_text(json.dumps(run), encoding='utf-8')
+    (folder / 'manifest.json').write_text(json.dumps({'files': [descriptor]}), encoding='utf-8')
+    plan = create(comparison_env)
+    packet = prepare(client, plan['id'])
+    doc = explained_document()
+    doc['case_explanations'][0]['stages'][0]['evidence'] = [
+        {'side': 'baseline', 'path': 'events.jsonl', 'event_id': 41}]
+    response = client.post(f'/api/v1/comparisons/{plan["id"]}/review', json=envelope(packet, doc))
+    assert response.status_code == 201, response.text
+    ref = response.json()['case_analyses'][0]['content']['explanation']['stages'][0]['evidence'][0]
+    assert ref['event_id'] == 41 and ref['model_reply'] == 2 and ref['start_line'] == 4
+    assert (folder / 'events.jsonl').read_bytes() == raw
+
+
+def test_line_reference_previews_the_exact_record_when_event_ids_repeat(comparison_env):
+    import hashlib
+    client, folder, _ = comparison_env
+    records = [json.loads(line) for line in (folder / 'events.jsonl').read_text().splitlines()]
+    records.append({'type': 'tool_result', 'event_id': 2, 'ok': True,
+                    'data': 'second segment result', 'files': {'huge-inventory': 'not-narrative'}})
+    raw = ''.join(json.dumps(row) + '\n' for row in records).encode()
+    (folder / 'events.jsonl').write_bytes(raw)
+    descriptor = {'path': 'events.jsonl', 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()}
+    run = json.loads((folder / 'run.json').read_text(encoding='utf-8'))
+    run['cases'][0]['files'] = [descriptor]
+    (folder / 'run.json').write_text(json.dumps(run), encoding='utf-8')
+    (folder / 'manifest.json').write_text(json.dumps({'files': [descriptor]}), encoding='utf-8')
+    plan = create(comparison_env)
+    packet = prepare(client, plan['id'])
+    doc = explained_document()
+    doc['case_explanations'][0]['stages'][0]['evidence'] = [
+        {'side': 'baseline', 'path': 'events.jsonl', 'start_line': 3, 'line_count': 1}]
+    response = client.post(f'/api/v1/comparisons/{plan["id"]}/review', json=envelope(packet, doc))
+    assert response.status_code == 201, response.text
+    ref = response.json()['case_analyses'][0]['content']['explanation']['stages'][0]['evidence'][0]
+    assert ref['start_line'] == 3 and 'second segment result' in ref['display_excerpt']
+    assert 'huge-inventory' not in ref['display_excerpt']
+    assert 'event_id' not in ref
+
+
 def test_explanation_round_trip_and_frozen_history(comparison_env):
     client, _, _ = comparison_env
     plan = create(comparison_env)

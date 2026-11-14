@@ -3,8 +3,9 @@ import json
 from pathlib import PurePosixPath
 from .materials import number
 from .service import task_state
+from . import repetition
 
-VERSION = "saved-checks-0.2.0"
+VERSION = "saved-checks-0.3.0"
 QUALITY = (
     ("completion", "原任务整体完成", ("core_acceptance",)),
     ("independent", "代码任务独立回归", ("independent",)),
@@ -20,7 +21,7 @@ RESOURCES = (
 )
 UNASSESSED = (
     ("context_quality", "上下文管理质量", "计数不能证明关键信息保留质量；旧版与新版整理机制的判据和事件口径需要单独核对。"),
-    ("useless_repetition", "无信息增益的重复调用", "尚无已确认的判据和逐题提取结果；相同参数的重复调用不自动等于无效。"),
+    ("cross_tool_repetition", "跨工具等价重复", "原样重复已单独统计；换工具、改变命令写法的等价重复仍未评估。"),
     ("recovery_quality", "错误恢复总体能力", "缺少统一的恢复机会与成功口径，反馈条件也需一致；不能用工具错误数代替恢复能力。"),
     ("conciseness", "简洁度与最小改动", "尚无已确认的评分分档；输出长度和代码行数不能直接替代质量判断。"),
     ("tool_strategy", "工具选择与调用策略", "本次只有调用及错误计数，尚未依据语义和任务需要逐次判断调用是否合理。"),
@@ -158,6 +159,7 @@ def aggregate(snapshot):
         cases.append({"case_id": cid, "task_state": task_state(snapshot, cid), "baseline": compact("baseline"), "candidate": compact("candidate")})
     unassessed = [{"id": identity, "name": name, "direction": "insufficient", "reason": reason} for identity, name, reason in UNASSESSED]
     return {"registry_version": VERSION, "quality": quality, "resources": resources, "unassessed": unassessed,
+        "repetition": repetition.aggregate(snapshot),
         "coverage": {"quality_assessed": sum(m["paired_cases"] > 0 for m in quality), "quality_total": len(quality),
                      "resource_assessed": sum(m["paired_cases"] > 0 for m in resources), "resource_total": len(resources),
                      "unassessed": len(unassessed)}, "cases": cases,

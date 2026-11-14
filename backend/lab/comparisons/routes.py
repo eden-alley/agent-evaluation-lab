@@ -4,7 +4,8 @@ from ..db import connect
 from ..datasets import QualityError
 from . import materials, schemas, service
 from . import review
-from .review_schemas import ReviewSubmission
+from .review_schemas import ReviewSubmission, ReviewPreparation
+from . import delivery
 from typing import Literal
 
 router = APIRouter(prefix="/api/v1/comparisons")
@@ -64,6 +65,16 @@ def case_context(identity: str, cid: str, request: Request):
 def prepare_review(identity: str, request: Request):
     with connect(request.app.state.db_path) as conn:
         return review.prepare(conn, identity)
+
+
+@router.post("/{identity}/review-materials", status_code=201)
+def provide_review_materials(identity: str, payload: ReviewPreparation, request: Request):
+    checked = record_source_check(request, identity)
+    if checked["source_state"] != "unchanged":
+        raise QualityError("EVIDENCE_CHANGED", "原归档变化，不能提供新的有效分析材料。", 409)
+    with connect(request.app.state.db_path) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        return delivery.issue(conn, request, identity, review.prepare(conn, identity), payload.explain_case_ids, payload.review_scope)
 
 
 @router.get("/{identity}/review-material")

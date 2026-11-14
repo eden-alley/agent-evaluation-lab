@@ -125,13 +125,14 @@ def test_version6_upgrade_keeps_immutable_reports_and_marks_unrecorded_time(comp
         before = conn.execute("SELECT snapshot FROM comparisons WHERE id=?", (plan["id"],)).fetchone()[0]
         content = conn.execute("SELECT content FROM comparison_reports WHERE id=?", (report["id"],)).fetchone()[0]
         conn.execute("DROP TABLE comparison_source_checks")
+        conn.execute("DROP TABLE review_preparations")
         conn.execute("PRAGMA user_version=6")
     with TestClient(create_app(db)) as upgraded:
         value = upgraded.get(base).json()
         assert value["source_state"] == "unchecked" and value["source_checked_at"] is None
         assert value["latest_report"]["report_hash"] == report["report_hash"]
         with sqlite3.connect(db) as conn:
-            assert conn.execute("PRAGMA user_version").fetchone()[0] == 7
+            assert conn.execute("PRAGMA user_version").fetchone()[0] == 8
             assert conn.execute("SELECT snapshot FROM comparisons WHERE id=?", (plan["id"],)).fetchone()[0] == before
             assert conn.execute("SELECT content FROM comparison_reports WHERE id=?", (report["id"],)).fetchone()[0] == content
         result = upgraded.post(base + "/verify")

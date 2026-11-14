@@ -8,6 +8,7 @@ from ..datasets import QualityError
 from ..db import connect
 from ..evaluation_imports import read_run, read_artifact
 from ..quality_checks import canonical, digest
+from . import repetition
 
 FIXTURE_ID = "u05-offline-v1"
 U05 = "U05-click-default-help"
@@ -60,6 +61,13 @@ def snapshot_run(request, run_id, case_ids, side):
             catalog.append({**entry, "id": "m-" + digest([side, cid, "archive", entry["path"]])[:24],
                             "source": side, "case_id": cid, "kind": "archive"})
         with connect(request.app.state.db_path) as conn:
+            # A shared model-input log is pinned without duplicating it on disk.
+            if not any(m["path"].endswith("/model-requests.jsonl") for m in catalog):
+                shared = [m for m in manifest["files"] if Path(m["path"]).name == "requests.jsonl"]
+                if len(shared)==1 and shared[0]["bytes"]<=32*1024*1024 and not any(m["path"]==shared[0]["path"] for m in catalog):
+                    entry=shared[0]
+                    catalog.append({**entry,"id":"m-"+digest([side,cid,"archive",entry["path"]])[:24],
+                                    "source":side,"case_id":cid,"kind":"archive","case_filter":cid})
             checks = conn.execute("""SELECT c.id,c.report FROM check_runs c JOIN checker_bindings b ON b.id=c.binding_id
                 WHERE c.run_id=? AND b.case_id=? AND c.status='completed' ORDER BY c.created_at DESC,c.id LIMIT 1""",
                                   (run_id, cid)).fetchall()
@@ -71,6 +79,7 @@ def snapshot_run(request, run_id, case_ids, side):
                                     if metrics["prompt_tokens"] is not None and metrics["completion_tokens"] is not None else None)
         metrics.update(tool_calls=None, tool_errors=None, context_compactions=None)
         trace = next((m for m in catalog if m["kind"] == "archive" and Path(m["path"]).name == "events.jsonl"), None)
+        events = []
         if trace:
             _, _, raw = read_artifact(folder, trace["path"], max_bytes=32 * 1024 * 1024)
             try:
@@ -84,8 +93,10 @@ def snapshot_run(request, run_id, case_ids, side):
         catalog.append(embedded(side, cid, "observed_metrics", "recorded-metrics.json",
                                 {"metrics": metrics, "trace_sha256": trace["sha256"] if trace else None,
                                  "scope": "保存的资源与事件计数，不是能力分数。"}))
+        repeats = repetition.snapshot_analysis(request, folder, events, trace, catalog, cid)
+        catalog.append(embedded(side,cid,"process_record","exact-repetition.json",repeats))
         source["cases"][cid] = {"case": record, "task_hash": digest(case.get("task", {})),
-                                "metrics": metrics, "materials": catalog}
+                                "metrics": metrics, "materials": catalog,"repetition":repeats}
     return source
 
 

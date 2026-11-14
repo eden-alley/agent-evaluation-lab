@@ -38,6 +38,47 @@ def test_cli_only_uses_local_api_roots(url):
         cli.Client(url)
 
 
+def test_summary_lists_candidates_without_turning_them_into_required_narratives():
+    from test_capability_review import sample
+    from lab.comparisons.metrics import aggregate
+    packet = {'metric_report': aggregate(sample()),
+              'key_case_candidates': [{'case_id': 'two', 'reasons': ['范围退步']}],
+              'skill_delivery': {'requirements': {'explanation_case_ids': []},
+                'skill': {'name': 'fixture', 'version_id': 'v7'}, 'id': 'method', 'provided_at': 'now'}}
+    text = cli.material_summary(packet)
+    assert 'two：范围退步' in text and '不要求逐题讲满' in text
+    assert '无额外指定' in text
+
+
+def test_markdown_keeps_actions_ahead_of_key_case_and_repeat_details():
+    from test_capability_review import sample
+    from lab.comparisons.metrics import aggregate
+    table = aggregate(sample())
+    report = {'metric_report': table, 'summary': 'full statistics',
+              'recommendations': [{'title': 'next action', 'action': 'inspect delivery',
+                                    'validation': 'compare protected files'}],
+              'case_analyses': [{'case_id': 'two', 'content': {'explanation': {
+                  'focus': 'candidate', 'background': 'key background', 'stages': [],
+                  'result': {'text': 'key result', 'evidence': []}, 'limitations': []}}}]}
+    text = cli.markdown({}, report)
+    assert text.index('next action') < text.index('key background')
+    assert '<details>' in text
+    assert text.index('next action') < text.index('原样重复判定明细')
+
+
+def test_markdown_without_advice_keeps_narrative_order_without_empty_advice_section():
+    from test_capability_review import sample
+    from lab.comparisons.metrics import aggregate
+    report = {'metric_report': aggregate(sample()), 'summary': 'full statistics', 'recommendations': [],
+              'case_analyses': [{'case_id': 'two', 'content': {'explanation': {
+                  'focus': 'candidate', 'background': 'specific task',
+                  'stages': [{'title': '第23—31次', 'text': 'actual feedback', 'evidence': []}],
+                  'result': {'text': 'conclusion\n\nfinal acceptance', 'evidence': []}, 'limitations': []}}}]}
+    text = cli.markdown({}, report)
+    assert '下一步开发建议' not in text and '尚未提供开发建议' not in text
+    assert text.index('conclusion') < text.index('specific task') < text.index('actual feedback') < text.index('final acceptance')
+
+
 def test_mcp_timeout_has_distinct_acknowledgement_error(monkeypatch):
     import lab.mcp_server as bridge
     real_client = httpx.AsyncClient
