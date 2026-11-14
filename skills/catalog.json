@@ -84,10 +84,10 @@
     },
     {
       "slug": "agent-version-comparison-workflow",
-      "method_version": "0.3.0",
+      "method_version": "0.9.0",
       "catalog": {
         "name": "Agent版本对比与开发方向",
-        "description": "程序准备归档与指标，外部Agent解释代表题经过、能力变化和最多3条开发建议。v0.3.0离线试用。",
+        "description": "程序全量统计，外部Agent讲清关键题过程，正式整批评测才可附开发建议。v0.9.0离线试用。",
         "kind": "evaluation",
         "tags": [
           "版本对比",
@@ -97,16 +97,16 @@
         ]
       },
       "payload_file": "platform/agent-version-comparison-workflow.json",
-      "platform_content_hash": "f23673aab76311f0fcfa3d1d1fb40a48e95d590dc17e9a13f06188a84f76bb4c",
-      "characters": 3382,
+      "platform_content_hash": "97bfc10a04f3fcfeba2c1bffb81982d7ea1a518cda550ef68a3b42ced05ec17c",
+      "characters": 4435,
       "source_files": [
         {
           "path": "SKILL.md",
-          "sha256": "7ae7abdba3423fa4045d041aa7b73534d934cc36b54234190059a7ae9f9ae70a"
+          "sha256": "88b9c1bcd4951a04092097a0d8ae7dd60e107301eb55dbaed406a60aeb990e18"
         },
         {
           "path": "references/engineering-retro.md",
-          "sha256": "ff9489c98d0ba29f4177a2b9fa4195e2df9dbca9953ac387b4ea8739e2505a1f"
+          "sha256": "17dcc67657b19f6083b6cc9c1c192cd6f8339fff01d10c3af9a22cbd7e85b6b8"
         },
         {
           "path": "references/task-explanation-examples.md",

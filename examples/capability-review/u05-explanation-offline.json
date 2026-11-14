@@ -7,6 +7,26 @@
       "case_ids": [
         "U05"
       ],
+      "evidence": [
+        {
+          "case_id": "U05",
+          "side": "baseline",
+          "path": "case-record.json",
+          "check_id": "scope"
+        },
+        {
+          "case_id": "U05",
+          "side": "candidate",
+          "path": "case-record.json",
+          "check_id": "scope"
+        },
+        {
+          "case_id": "U05",
+          "side": "candidate",
+          "path": "raw/U05/events.jsonl",
+          "event_id": 66
+        }
+      ],
       "known_mechanism": "原归档已有scope检查，并明确记录README.md与tests/test_contract.py被修改；当时的写入拦截与保护配置尚未核查。",
       "gap": "功能和报告已经交付，但修改范围检查由A的通过变为B的未通过。",
       "cause_status": "hypothesis",
@@ -14,7 +34,8 @@
       "action": "先只读核对写入原测试文件和README时的工具记录、允许路径及已有保护机制，再决定修复入口还是补足既有约束。",
       "validation": "后续固定题面、预算、模型和SYSTEM，检查保护文件字节未变，同时独立功能检查与报告仍满足要求。",
       "success_signals": "功能、最终验证和报告保留，修改范围检查恢复通过。",
-      "guardrails": "不放宽原文件保留要求，不把新增测试写进受保护文件，也不根据最终回复宣称任务整体成功。"
+      "guardrails": "不放宽原文件保留要求，不把新增测试写进受保护文件，也不根据最终回复宣称任务整体成功。",
+      "priority_reason": "功能、自测和报告已完成，却因受保护文件被修改而整体失败，优先核查可保住已有交付成果。"
     }
   ],
   "limitations": [

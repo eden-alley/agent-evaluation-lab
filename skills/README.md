@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
 | [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
-| [Agent能力分析](agent-version-comparison-workflow/SKILL.md) | 0.3.0 离线试用 | 程序统计指标、解析证据并提交；外部Agent讲清代表题背景、经过与结果，解释取舍并给出开发建议 |
+| [Agent能力分析](agent-version-comparison-workflow/SKILL.md) | 0.9.0 离线试用 | 全量统计、按需讲解关键题，指标升降与关键过程；正式整批评测才可附整批开发建议；程序管理引用与提交 |
 
 方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
 
