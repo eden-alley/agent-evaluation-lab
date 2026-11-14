@@ -10,6 +10,7 @@ import type {
 import { Header, Badge, Tabs } from "./report-ui";
 import { runCasePresentation } from "../lib/run-case-introductions";
 import { TraceNarrative } from "./trace-narrative";
+import { RunTaskProcess } from "./run-task-process";
 import { CurrentCapability } from "./current-capability";
 import { DeliveryRecheck } from "./delivery-recheck";
 
@@ -307,7 +308,7 @@ function ImportedRunDetail({ run }: { run: ImportedRun }) {
 }
 
 function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
-  const [tab, setTab] = useState("本题结果");
+  const [tab, setTab] = useState("任务过程");
   const presentation = runCasePresentation(run, item);
   const finding = mainFinding(run.id, item);
   const recovery = item.checks.find(
@@ -319,7 +320,7 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
         title={presentation?.title ?? item.title}
         desc={`${item.group} · ${item.difficulty_design} · ${item.metrics.model_requests} 次请求 · ${item.metrics.elapsed_seconds.toFixed(1)} 秒`}
       />
-      {presentation && (
+      {presentation && tab !== "任务过程" && (
         <div className="panel pad section-bottom">
           {presentation.detail ? (
             <>
@@ -338,38 +339,32 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
           )}
         </div>
       )}
-      <DeliveryRecheck key={run.id + item.id} run={run} item={item} />
-      <CurrentCapability run={run} caseId={item.id} />
       <Tabs
-        labels={[
-          "本题结果",
-          "逐项评分",
-          "执行轨迹与交付文件",
-          "完整任务与输入",
-        ]}
+        labels={["任务过程", "本题结果", "逐项评分", "完整任务与输入"]}
         active={tab}
         set={setTab}
       />
       {tab === "本题结果" ? (
-        <div className="panel pad">
-          <h2>归档原结果</h2>
-          <Badge value={item.core_acceptance} />
-          {finding && <p>{finding}</p>}
-          {recovery && (
-            <p>
-              <strong>冲突恢复通过</strong>　{recovery.reason}
-            </p>
-          )}
-          <button className="button small" onClick={() => setTab("逐项评分")}>
-            查看逐项评分
-          </button>{" "}
-          <button
-            className="button small"
-            onClick={() => setTab("执行轨迹与交付文件")}
-          >
-            查看执行证据
-          </button>
-        </div>
+        <>
+          <DeliveryRecheck key={run.id + item.id} run={run} item={item} />
+          <CurrentCapability run={run} caseId={item.id} />
+          <div className="panel pad">
+            <h2>归档原结果</h2>
+            <Badge value={item.core_acceptance} />
+            {finding && <p>{finding}</p>}
+            {recovery && (
+              <p>
+                <strong>冲突恢复通过</strong>　{recovery.reason}
+              </p>
+            )}
+            <button className="button small" onClick={() => setTab("逐项评分")}>
+              查看逐项评分
+            </button>{" "}
+            <button className="button small" onClick={() => setTab("任务过程")}>
+              查看任务过程与依据
+            </button>
+          </div>
+        </>
       ) : tab === "逐项评分" ? (
         <div className="panel pad">
           {dimensions
@@ -414,11 +409,8 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
                   ))}
               </section>
             ))}
-          <button
-            className="button"
-            onClick={() => setTab("执行轨迹与交付文件")}
-          >
-            打开原始证据文件
+          <button className="button" onClick={() => setTab("任务过程")}>
+            查看过程与原始证据
           </button>
           <details style={{ marginTop: 18 }}>
             <summary>Agent 最终答复</summary>
@@ -468,14 +460,21 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
           />
         </>
       ) : (
-        <>
+        <RunTaskProcess
+          key={run.id + item.id}
+          runId={run.id}
+          item={item}
+          introduction={presentation}
+        >
           <TraceNarrative runId={run.id} caseId={item.id} />
           <ArtifactViewer
             runId={run.id}
-            files={item.files.filter((f) => !f.path.startsWith("cases/"))}
-            initial={`run-20261109/${item.id}/review-evidence.md`}
+            files={item.files}
+            initial={
+              item.files.find((f) => /(^|\/)report\.md$/.test(f.path))?.path
+            }
           />
-        </>
+        </RunTaskProcess>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import {
   evidenceOrder,
 } from "../lib/capability-review";
 import styles from "./comparison-metrics.module.css";
+import { RepetitionMetrics } from "./repetition-metrics";
 
 export function ComparisonMetrics({
   report,
@@ -27,7 +28,7 @@ export function ComparisonMetrics({
   const metric = [...report.quality, ...report.resources].find(
     (m) => m.id === selected,
   );
-  function evidenceButton(m: CapabilityMetric) {
+  function evidenceButton(m: Pick<CapabilityMetric, "id" | "name">) {
     return (
       <button
         className={styles.metricButton}
@@ -44,10 +45,7 @@ export function ComparisonMetrics({
       <section aria-labelledby="quality-metrics">
         <h2 id="quality-metrics">指标升降表</h2>
         <p className={styles.caption}>
-          已统计 {report.coverage.quality_assessed} /{" "}
-          {report.coverage.quality_total} 项质量指标、
-          {report.coverage.resource_assessed} 项资源指标；另有{" "}
-          {report.coverage.unassessed} 个方向未评估。点击指标查看题目和判据。
+          点击指标查看对应题目与依据。通过题数和过程次数分别标注，不合成总分。
         </p>
         <div
           className={styles.scroll}
@@ -105,13 +103,81 @@ export function ComparisonMetrics({
                   </td>
                 </tr>
               ))}
+              {report.repetition && (
+                <tr>
+                  <th scope="row">
+                    {evidenceButton(report.repetition)}
+                    <small>
+                      {report.repetition.paired_cases}题可比 ·{" "}
+                      {report.repetition.excluded_cases.length}题待判 ·
+                      次数越少越好
+                    </small>
+                  </th>
+                  <td className={styles.numeric}>
+                    {report.repetition.before === null
+                      ? "—"
+                      : `${report.repetition.before}次`}
+                  </td>
+                  <td className={styles.numeric}>
+                    {report.repetition.after === null
+                      ? "—"
+                      : `${report.repetition.after}次`}
+                  </td>
+                  <td>
+                    <strong
+                      className={
+                        report.repetition.direction === "regressed"
+                          ? styles.regressed
+                          : report.repetition.direction === "improved"
+                            ? styles.improved
+                            : styles.neutral
+                      }
+                    >
+                      {(
+                        {
+                          improved: "本次进步",
+                          regressed: "本次退步",
+                          mixed: "有取舍",
+                          unchanged: "本次无明确变化",
+                        } as Record<string, string>
+                      )[report.repetition.direction] ?? "无法判断"}
+                    </strong>
+                    {!!report.repetition.regressed_cases?.length && (
+                      <small className={styles.regressed}>
+                        回归：{report.repetition.regressed_cases.join("、")}
+                      </small>
+                    )}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <p className={styles.caption}>
-          数字为通过题数 / 同题同判据的共同题数；各项分母不同，不合成总分。
+          质量指标为通过题数 /
+          共同题数；无效重复为确认次数，只合并可比较的题目。
         </p>
       </section>
+      {selected === report.repetition?.id && report.repetition && (
+        <section
+          id="metric-evidence"
+          ref={evidencePanel}
+          tabIndex={-1}
+          className={styles.evidence}
+          aria-label="重复调用的依据"
+        >
+          <div className={styles.evidenceHeading}>
+            <h3>重复调用：对应题目与判定依据</h3>
+            <button className="button small" onClick={() => setSelected(null)}>
+              收起依据
+            </button>
+          </div>
+          <RepetitionMetrics
+            metric={report.repetition}
+            className={styles.repetition}
+          />
+        </section>
+      )}
       {metric && (
         <section
           id="metric-evidence"

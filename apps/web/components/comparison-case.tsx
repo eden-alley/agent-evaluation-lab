@@ -14,6 +14,7 @@ import {
   evidencePreview,
 } from "../lib/comparisons";
 import styles from "./comparison-workspace.module.css";
+import { TaskNarrative } from "./task-narrative";
 
 export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
   return (
@@ -22,7 +23,7 @@ export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
     </span>
   );
 }
-function Evidence({ material }: { material: Material }) {
+export function Evidence({ material }: { material: Material }) {
   const raw = material.excerpt ?? "节选未保存，请按材料编号读取原件。";
   const preview =
     material.display_excerpt ?? evidencePreview(material.path, raw);
@@ -33,6 +34,7 @@ function Evidence({ material }: { material: Material }) {
         {material.is_simulation ? " · 模拟材料" : ""} · {material.path}
         {material.start_line ? ` · 第${material.start_line}行起` : ""}
         {material.event_id ? ` · 事件${material.event_id}` : ""}
+        {material.model_reply ? ` · 第${material.model_reply}次模型回复` : ""}
         {material.check_id ? ` · 检查项 ${material.check_id}` : ""}
       </p>
       <pre>{preview}</pre>
@@ -144,11 +146,6 @@ export function ComparisonCaseView({
         <h2 style={{ marginTop: 12 }}>{task?.title ?? caseId}</h2>
         {explanation ? (
           <>
-            <p>{explanation.background}</p>
-            <p className={styles.explanationResult}>
-              <strong>本次结果：</strong>
-              {explanation.result.text}
-            </p>
             <p className={styles.muted}>
               {focusLabel}的过程讲解 ·{" "}
               {explanationSimulated ? "包含模拟材料" : "依据已有真实归档"}
@@ -183,32 +180,17 @@ export function ComparisonCaseView({
       </section>
       {explanation ? (
         <section className={styles.section} aria-label="任务过程讲解">
-          <h2>实际经过与关键反馈</h2>
-          <p className={styles.muted}>
-            以下为对保存材料的讲解，没有重新执行任务。点击依据可查看对应事件或检查项。
-          </p>
-          <div className={styles.list}>
-            {explanation.stages.map((stage, i) => (
-              <article className={styles.item} key={i}>
-                <h3>{stage.title}</h3>
-                <p style={{ whiteSpace: "pre-wrap" }}>{stage.text}</p>
-                <details className={styles.evidence}>
-                  <summary>查看本段依据（{stage.evidence.length}）</summary>
-                  {stage.evidence.map((m, index) => (
-                    <Evidence key={m.id + "-" + index} material={m} />
-                  ))}
-                </details>
-              </article>
-            ))}
-          </div>
-          <details className={styles.evidence}>
-            <summary>
-              查看结果判定依据（{explanation.result.evidence.length}）
-            </summary>
-            {explanation.result.evidence.map((m, index) => (
-              <Evidence key={m.id + "-" + index} material={m} />
-            ))}
-          </details>
+          <TaskNarrative
+            explanation={explanation}
+            renderEvidence={(items) => (
+              <details className={styles.evidence}>
+                <summary>查看依据（{items.length}）</summary>
+                {items.map((m, index) => (
+                  <Evidence key={m.id + "-" + index} material={m} />
+                ))}
+              </details>
+            )}
+          />
           {!!explanation.limitations.length && (
             <p className={styles.muted}>
               讲解范围与限制：{explanation.limitations.join("；")}
@@ -217,7 +199,7 @@ export function ComparisonCaseView({
         </section>
       ) : (
         <p className={styles.muted}>
-          本题尚未提供过程讲解。以下展示已有原记录和程序统计，不代表已经深入分析了执行经过。
+          本题保留自动统计与原判据，本次未展开过程讲解。
         </p>
       )}
       <section className={styles.section}>

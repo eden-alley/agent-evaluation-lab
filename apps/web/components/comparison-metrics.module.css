@@ -193,3 +193,48 @@
     padding: 12px;
   }
 }
+.repetition {
+  padding: 18px 0;
+  border-bottom: 1px solid #e2e6ed;
+  margin-bottom: 20px;
+}
+.repetition table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.repetition th,
+.repetition td {
+  padding: 9px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e6ed;
+}
+.repetition td {
+  font-variant-numeric: tabular-nums;
+}
+.repetition p {
+  margin: 9px 0;
+}
+.repetition details {
+  margin: 10px 0;
+  padding: 10px 0;
+  border-top: 1px solid #e2e6ed;
+}
+.repetition summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.repetition pre {
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  background: #eef1f5;
+}
+.repetition [data-direction="regressed"] {
+  color: #a93333;
+}
+.repetition [data-direction="improved"] {
+  color: #136e4c;
+}
