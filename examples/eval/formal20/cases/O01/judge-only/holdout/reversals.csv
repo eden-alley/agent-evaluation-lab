@@ -1,0 +1,9 @@
+id,settlement_id,order_id,currency,amount
+C-1,PAY-2,W-2,CNY,1.08
+C-2,PAY-3,W-1,CNY,0.02
+C-3,PAY-4,W-4,CNY,0.09
+C-4,PAY-2,W-4,CNY,0.04
+C-5,PAY-2,W-2,USD,0.10
+C-6,PAY-3,W-1,CNY,0.01
+C-6,PAY-3,W-1,CNY,0.02
+C-7,PAY-2,W-Z,CNY,0.20

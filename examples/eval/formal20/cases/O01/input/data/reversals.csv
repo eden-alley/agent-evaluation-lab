@@ -1,0 +1,10 @@
+id,settlement_id,order_id,currency,amount
+R-1,S-1,O-100,CNY,20.00
+R-1,S-1,O-100,CNY,20.00
+R-2,S-404,O-100,CNY,3.01
+R-3,S-2,O-100,CNY,7.50
+R-4,S-2,O-101,USD,1.10
+R-5,S-7,O-104,CNY,0.01
+R-6,S-7,O-104,CNY,1.01
+R-6,S-7,O-104,CNY,1.02
+R-7,S-4,O-102,CNY,2.00

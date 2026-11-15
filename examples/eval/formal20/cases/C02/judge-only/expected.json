@@ -1,0 +1,9 @@
+{
+  "file": "conf/service.conf",
+  "hex": "23206163746976650d0a6d6f6465203d2070726f64756374696f6e0a6d6f64655f6261636b7570203d2073746167696e670d0a23206d6f6465203d2073746167696e670a6e616d65203d20e6b58be8af95",
+  "change": {
+    "replacements": 1,
+    "bytes_before": 78,
+    "bytes_after": 81
+  }
+}

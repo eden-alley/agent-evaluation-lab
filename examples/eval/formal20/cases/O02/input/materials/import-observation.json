@@ -1,0 +1,10 @@
+{
+  "recorded_date": "2026-11-09",
+  "source": "import-receipt.json and verification.json from the recorded baseline import",
+  "run_id": "harness-boundary20-20261109",
+  "dataset_version": 1,
+  "case_count": 20,
+  "artifact_hashes_verified": 1097,
+  "model_calls_during_import": 0,
+  "browser_observation": "real run metrics and all 20 cases visible"
+}

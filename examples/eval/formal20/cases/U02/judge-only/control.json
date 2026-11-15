@@ -1,0 +1,24 @@
+{
+  "version": "langchain-text-splitters==1.1.2",
+  "origin": "https://github.com/langchain-ai/langchain/issues/40299",
+  "input_hashes": {
+    "run-tests.cmd": "5ec7d636b132edf9f7db5517e5921b476013a77295d555cc839b5d9833836a58",
+    "src/langchain_text_splitters/__init__.py": "56f2f7eaec35018a83bef48c331c8e87e663348abacc53e66d59c957d87119dc",
+    "src/langchain_text_splitters/base.py": "661a3e414765a32f4088267476ea46e4f87b958047b5fb49acf9744cd3115976",
+    "src/langchain_text_splitters/character.py": "7f5421d0c3e5b45e634634f121aea563ad5428257ed2618cbb5bf0e6f2182998",
+    "src/langchain_text_splitters/html.py": "028b5a3c57b3df29e062c841db846584bf66388810248cfc09566b954c7e85df",
+    "src/langchain_text_splitters/json.py": "48878a48e0e1640979c6c9bf00f21be30ad140a35a0e8129dac87f1701386cc7",
+    "src/langchain_text_splitters/jsx.py": "5d8921f172f6f39e520ee1df87cb3248ebf8af0959be433691e29c63199c31f3",
+    "src/langchain_text_splitters/konlpy.py": "13ca05349aaaae20623cd2bde7a9b63f8fa4ef0812c9cce446cd6d786b21d053",
+    "src/langchain_text_splitters/latex.py": "a8c0c91f065f9f96d9ae2aeef45364167d096d6d6f8b6f3f69ea5ff4116e88ae",
+    "src/langchain_text_splitters/markdown.py": "effdc27edd17f7739bc26f8f613435213614ed1cc58e38688de871e2b4e1284a",
+    "src/langchain_text_splitters/nltk.py": "8ac9704a59aeea760a02fa497db73f230a79ff07ea4789e644872561d458aadd",
+    "src/langchain_text_splitters/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/langchain_text_splitters/python.py": "dd75b3920e924879beb371458268974b7ad7e04edf7cd621d938248c2a450b32",
+    "src/langchain_text_splitters/sentence_transformers.py": "1c918fdcad1aab17697294799c531e36dc293e86f4a83753e8ea840f132c674d",
+    "src/langchain_text_splitters/spacy.py": "52ad3578f4694f887dd157d76aacb0fb73b44a79f5aa721b37326b24bc319619",
+    "src/langchain_text_splitters/xsl/converting_to_header.xslt": "59eb0daa2e1fa3677d08fbf76d9751b13a0b258135d8cacc645bf67b036f59f5",
+    "tests/test_chunks.py": "c2b030c0495f1f6fb7d9bcfd4b30681d8c90df86633520ff70324e86fd541da1"
+  },
+  "dependency_mode": "existing local Python 3.12 environment"
+}

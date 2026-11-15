@@ -1,0 +1,8 @@
+expense_id,date,category,amount,currency,status
+E003,2026-10-02,餐饮,18.00,CNY,approved
+E005,2026-10-03,交通,12.00,CNY,approved
+E008,2026-10-04,餐饮,16.50,CNY,approved
+E009,2026-10-04,交通,8.00,CNY,approved
+E010,2026-10-05,学习,40.00,USD,approved
+E011,2026-11-01,餐饮,10.00,CNY,approved
+E012,2026-10-05,其他,5.00,CNY,rejected

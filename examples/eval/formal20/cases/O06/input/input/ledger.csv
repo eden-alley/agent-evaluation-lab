@@ -1,0 +1,6 @@
+expense_id,category,amount,status
+R01,餐饮,21.50,approved
+R02,餐饮,10.00,approved
+R03,交通,8.00,approved
+R04,退款,-6.50,approved
+R05,住宿,50.00,pending

@@ -1,0 +1,5 @@
+order_id,currency,expected_amount
+W-4,CNY,1.03
+W-2,CNY,20.01
+W-3,CNY,9.03
+W-1,CNY,10.10

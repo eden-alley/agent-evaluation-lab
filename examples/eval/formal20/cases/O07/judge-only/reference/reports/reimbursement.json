@@ -1,0 +1,36 @@
+{
+  "period": "2026-10",
+  "source_rows": 14,
+  "unique_records": 12,
+  "duplicate_rows": 2,
+  "included_records": 7,
+  "excluded_records": 5,
+  "by_category": {
+    "交通": "26.00",
+    "学习": "-9.90",
+    "餐饮": "60.00"
+  },
+  "total": "76.10",
+  "excluded": [
+    {
+      "expense_id": "E004",
+      "reason": "category"
+    },
+    {
+      "expense_id": "E007",
+      "reason": "status"
+    },
+    {
+      "expense_id": "E010",
+      "reason": "currency"
+    },
+    {
+      "expense_id": "E011",
+      "reason": "date"
+    },
+    {
+      "expense_id": "E012",
+      "reason": "status"
+    }
+  ]
+}

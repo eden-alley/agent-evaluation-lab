@@ -1,0 +1,6 @@
+order_id,currency,expected_amount
+O-100,CNY,100.00
+O-101,CNY,49.90
+O-102,CNY,19.99
+O-103,CNY,30.00
+O-104,CNY,25.00
