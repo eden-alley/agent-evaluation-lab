@@ -1,0 +1,41 @@
+{
+  "input_hashes": {
+    "projects/deep_folder/config.py": "654f1c66322ce73200ab2f4e5ca871ec1406693f689943fe295c35a2a4d990cb",
+    "projects/deep_folder/real_config.py": "7af53846354c063ddd7435632d2119d7005fc3cdfd3f6441d90299d59579b157"
+  },
+  "ordered_paths": [
+    "projects/deep_folder/config.py",
+    "projects/deep_folder/real_config.py"
+  ],
+  "turn_1_last_line": "RETRY_COUNT = 2",
+  "turn_2_all_lines": [
+    "# owner: production",
+    "RELEASE_TAG = \"region#production\"",
+    "ENV = \"production\"",
+    "LOG_LEVEL = \"WARNING\"",
+    "RETRY_COUNT = 5"
+  ],
+  "artifact": "projects/deep_folder/diff.txt",
+  "turn_3_lines": [
+    "- # owner: staging",
+    "+ # owner: production",
+    "- RELEASE_TAG = \"region#staging\"",
+    "+ RELEASE_TAG = \"region#production\"",
+    "- ENV = \"staging\"",
+    "+ ENV = \"production\"",
+    "- LOG_LEVEL = \"INFO\"",
+    "+ LOG_LEVEL = \"WARNING\"",
+    "- RETRY_COUNT = 2",
+    "+ RETRY_COUNT = 5"
+  ],
+  "turn_4_lines": [
+    "- RELEASE_TAG = \"region#staging\"",
+    "+ RELEASE_TAG = \"region#production\"",
+    "- ENV = \"staging\"",
+    "+ ENV = \"production\"",
+    "- LOG_LEVEL = \"INFO\"",
+    "+ LOG_LEVEL = \"WARNING\"",
+    "- RETRY_COUNT = 2",
+    "+ RETRY_COUNT = 5"
+  ]
+}

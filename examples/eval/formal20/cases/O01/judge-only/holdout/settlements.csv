@@ -1,0 +1,9 @@
+id,order_id,currency,amount
+PAY-2,W-2,CNY,20.00
+PAY-1,W-1,CNY,4.03
+PAY-2,W-2,CNY,20.00
+PAY-5,W-3,USD,9.00
+PAY-3,W-1,CNY,6.07
+PAY-4,W-4,CNY,1.03
+PAY-2,W-2,CNY,20.00
+PAY-4,W-4,CNY,1.04

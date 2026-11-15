@@ -1,0 +1,2 @@
+# From langchain-text-splitters 1.1.2 package metadata; local src/ is used.
+langchain-core>=1.2.31,<2.0.0

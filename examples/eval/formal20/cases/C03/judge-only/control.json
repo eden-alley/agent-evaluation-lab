@@ -1,0 +1,21 @@
+{
+  "conflict_count": 0,
+  "allowed_sources": [
+    "transport/client.py",
+    "transport/codec.py"
+  ],
+  "input_hashes": {
+    "demo.py": "9b253119a51d729432db5f439d1debe1d5d5a27ea3b2376f61d0f671452f9dbf",
+    "edit_source.py": "6e47ec66c370e3c425c6d008f0d1a161e9463494f0993265ac2a14a07b1cdbbb",
+    "legacy/codec.py": "29ef2b6bd15141b07ebf7530a0b3be37a27f3977e740dfb4bac52b4a0299f973",
+    "legacy/README.txt": "849ab6163456cd2364022b48309ab4d67e42bd1bb7ee4c65fd2abcaacf9c0a32",
+    "README.md": "e8a882f05c10a466caa7c14b48400087ace00f52ecdf4a72fe6b3b54e66487b8",
+    "service.py": "3779df687078d1129e7892ece103c939e4bbd584c8872970555eaa2cee8d2c46",
+    "settings.json": "a0fb5a72aff31bdeb9c74e6c6a3fae6003ddc3e53f6bd7be9bc42b72f7173ef9",
+    "tests/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "tests/test_public.py": "22ca28d2f7eeffd64cffb7743c56aaf307b42eef4a1869b8af6728ee5f45cf23",
+    "transport/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "transport/client.py": "ad18e1f3b825da9548718e136213adc469fa0529a23fee0b0505f9fde7276309",
+    "transport/codec.py": "5e7daa8e86589db15819539c5a1cee69a121dfee6a890aaa936ad5e4d44ccd53"
+  }
+}

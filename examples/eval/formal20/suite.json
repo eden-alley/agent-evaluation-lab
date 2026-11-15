@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "formal20-example",
+  "example_version": "0.1.0",
+  "status": "example",
+  "source_suite": "harness-formal-20-v0.2",
+  "exported_on": "2026-11-15",
+  "source_cases_sha256": "b5176ead4c686ea1ae1d525c0bdb9b73acae37298112a41aef00638a1db194fb",
+  "case_count": 20,
+  "groups": {
+    "常见用户任务": 5,
+    "代码能力专项": 5,
+    "其他能力": 10
+  },
+  "cases": "cases.json",
+  "agent_workspace_rule": "Only copy input/ into the agent workspace. TASK messages are sent one turn at a time; judge-only/ remains outside.",
+  "scoring_status": "Reference tests and expected artifacts only; no unified evaluator or model runner is included.",
+  "portability_changes": [
+    {
+      "path": "cases/U02/input/run-tests.cmd",
+      "reason": "Replace host-specific Python path with EVAL_PYTHON; keep original unittest arguments.",
+      "source_sha256": "5ec7d636b132edf9f7db5517e5921b476013a77295d555cc839b5d9833836a58",
+      "export_sha256": "0621aec0b2fbefde20fd2ce28cd6ac621ae63a12946137e11ca412b34f7709bd"
+    },
+    {
+      "path": "cases/U03/input/run-check.cmd",
+      "reason": "Replace host-specific Python path with EVAL_PYTHON; keep original unittest arguments.",
+      "source_sha256": "bb1479d6fd1c1a42c2f0fe70093466aa63119599e08616acc3947cf430a7bcb9",
+      "export_sha256": "0621aec0b2fbefde20fd2ce28cd6ac621ae63a12946137e11ca412b34f7709bd"
+    },
+    {
+      "path": "cases/U04/input/run-check.cmd",
+      "reason": "Replace host-specific Python path with EVAL_PYTHON; keep original unittest arguments.",
+      "source_sha256": "daf195a06e4379a243b23e70a4a2d9082a5b03b676f1b3c76974e12207c02fb1",
+      "export_sha256": "0621aec0b2fbefde20fd2ce28cd6ac621ae63a12946137e11ca412b34f7709bd"
+    },
+    {
+      "path": "cases/U05/input/run-check.cmd",
+      "reason": "Replace host-specific Python path with EVAL_PYTHON; keep original unittest arguments.",
+      "source_sha256": "ffbcad9abded896b6e8a7783641ed272f29a226ccb73fdde49bfa61e3583a93f",
+      "export_sha256": "0621aec0b2fbefde20fd2ce28cd6ac621ae63a12946137e11ca412b34f7709bd"
+    }
+  ]
+}

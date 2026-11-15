@@ -1,0 +1,2 @@
+# Synthetic task inputs; do not apply the application's data/ ignore here.
+!cases/O01/input/data/

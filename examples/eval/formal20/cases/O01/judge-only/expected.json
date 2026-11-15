@@ -1,0 +1,202 @@
+{
+  "original": {
+    "orders": [
+      {
+        "order_id": "O-100",
+        "expected": "100.00",
+        "gross": "100.00",
+        "reversal": "20.00",
+        "net": "80.00",
+        "difference": "-20.00"
+      },
+      {
+        "order_id": "O-101",
+        "expected": "49.90",
+        "gross": "50.00",
+        "reversal": "0.00",
+        "net": "50.00",
+        "difference": "0.10"
+      },
+      {
+        "order_id": "O-102",
+        "expected": "19.99",
+        "gross": "0.00",
+        "reversal": "0.00",
+        "net": "0.00",
+        "difference": "-19.99"
+      },
+      {
+        "order_id": "O-103",
+        "expected": "30.00",
+        "gross": "0.00",
+        "reversal": "0.00",
+        "net": "0.00",
+        "difference": "-30.00"
+      },
+      {
+        "order_id": "O-104",
+        "expected": "25.00",
+        "gross": "25.00",
+        "reversal": "0.01",
+        "net": "24.99",
+        "difference": "-0.01"
+      }
+    ],
+    "totals": {
+      "expected": "224.89",
+      "gross": "175.00",
+      "reversal": "20.01",
+      "net": "154.99",
+      "difference": "-69.90"
+    },
+    "duplicate_rows": [
+      {
+        "table": "settlements",
+        "id": "S-1",
+        "extra_rows": 1
+      },
+      {
+        "table": "reversals",
+        "id": "R-1",
+        "extra_rows": 1
+      }
+    ],
+    "conflicting_ids": [
+      {
+        "table": "settlements",
+        "id": "S-4"
+      },
+      {
+        "table": "reversals",
+        "id": "R-6"
+      }
+    ],
+    "unmatched": [
+      {
+        "table": "settlements",
+        "id": "S-5",
+        "reason": "currency_mismatch"
+      },
+      {
+        "table": "settlements",
+        "id": "S-6",
+        "reason": "unknown_order"
+      },
+      {
+        "table": "reversals",
+        "id": "R-2",
+        "reason": "unmatched_settlement"
+      },
+      {
+        "table": "reversals",
+        "id": "R-3",
+        "reason": "order_mismatch"
+      },
+      {
+        "table": "reversals",
+        "id": "R-4",
+        "reason": "currency_mismatch"
+      },
+      {
+        "table": "reversals",
+        "id": "R-7",
+        "reason": "unmatched_settlement"
+      }
+    ],
+    "unmatched_order_ids": [
+      "O-102",
+      "O-103"
+    ]
+  },
+  "holdout": {
+    "orders": [
+      {
+        "order_id": "W-4",
+        "expected": "1.03",
+        "gross": "0.00",
+        "reversal": "0.00",
+        "net": "0.00",
+        "difference": "-1.03"
+      },
+      {
+        "order_id": "W-2",
+        "expected": "20.01",
+        "gross": "20.00",
+        "reversal": "1.08",
+        "net": "18.92",
+        "difference": "-1.09"
+      },
+      {
+        "order_id": "W-3",
+        "expected": "9.03",
+        "gross": "0.00",
+        "reversal": "0.00",
+        "net": "0.00",
+        "difference": "-9.03"
+      },
+      {
+        "order_id": "W-1",
+        "expected": "10.10",
+        "gross": "10.10",
+        "reversal": "0.02",
+        "net": "10.08",
+        "difference": "-0.02"
+      }
+    ],
+    "totals": {
+      "expected": "40.17",
+      "gross": "30.10",
+      "reversal": "1.10",
+      "net": "29.00",
+      "difference": "-11.17"
+    },
+    "duplicate_rows": [
+      {
+        "table": "settlements",
+        "id": "PAY-2",
+        "extra_rows": 2
+      }
+    ],
+    "conflicting_ids": [
+      {
+        "table": "settlements",
+        "id": "PAY-4"
+      },
+      {
+        "table": "reversals",
+        "id": "C-6"
+      }
+    ],
+    "unmatched": [
+      {
+        "table": "settlements",
+        "id": "PAY-5",
+        "reason": "currency_mismatch"
+      },
+      {
+        "table": "reversals",
+        "id": "C-3",
+        "reason": "unmatched_settlement"
+      },
+      {
+        "table": "reversals",
+        "id": "C-4",
+        "reason": "order_mismatch"
+      },
+      {
+        "table": "reversals",
+        "id": "C-5",
+        "reason": "currency_mismatch"
+      },
+      {
+        "table": "reversals",
+        "id": "C-7",
+        "reason": "unknown_order"
+      }
+    ],
+    "unmatched_order_ids": [
+      "W-3",
+      "W-4"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "E004": [
+    "category"
+  ],
+  "E007": [
+    "status"
+  ],
+  "E010": [
+    "currency",
+    "category"
+  ],
+  "E011": [
+    "date"
+  ],
+  "E012": [
+    "status"
+  ]
+}

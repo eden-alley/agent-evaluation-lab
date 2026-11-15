@@ -1,0 +1,14 @@
+Source: backend/lab/main.py, health function verbatim
+    @app.get("/api/v1/health")
+    def health():
+        with connect(path) as conn:
+            mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
+        return {"status": "ok", "database": "sqlite", "journal_mode": mode,
+                "capabilities": {"projects": True, "agent_registration": True, "agent_check": True,
+                    "dataset_quality_handoff": True, "external_agent_tools": True, "skill_catalog": True, "evaluation_execution": False}}
+
+
+Source: backend/lab/evaluation_imports.py, registered route decorators verbatim
+@router.get('')
+@router.get('/{run_id}')
+@router.get('/{run_id}/artifact')
