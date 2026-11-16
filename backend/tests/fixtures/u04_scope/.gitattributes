@@ -1,0 +1,4 @@
+# Preserve exact frozen fixture bytes for SHA-256 checks.
+original.py -text
+appended.py -text
+task.md -text
