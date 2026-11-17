@@ -1,4 +1,8 @@
-# 轻量能力分析 v0.9.0
+# 轻量能力分析 v0.10.1
+
+本页是材料、指标和提交的操作说明。先理解当前缺陷与代码流程，请读 [项目现状与取舍](PROJECT_REVIEW.md) → [架构与代码地图](../ARCHITECTURE.md)；其他入口见 [文档目录](README.md)。
+
+发起已获授权评测的同一外部 Agent，在执行结束后继续本次任务的关键题分析与报告提交，收到回执后再宣布报告交付完成。日常 `scripts/evaluation.py` 入口与接续命令见 [外部 Agent 接入](EXTERNAL_AGENT.md#日常评测与分析接续)。
 
 本次用途由准备参数 `review_scope` 指定，默认 `focused`；不超过3题始终为小范围验证，只输出指标与关键过程。正式整批评测选择 `formal_batch`（且超过3题）才允许附整批建议。用途由程序保存，提交时强制校验；正式批次无新建议仍可为空，不要求原因。旧方法与历史报告保留原样。
 
@@ -69,7 +73,7 @@ MCP：同一连接中调用 `prepare_capability_review`，按需 `list_capabilit
 
 ## 指标口径
 
-注册表：`backend/lab/comparisons/metrics.py`，版本 `saved-checks-0.2.0`。修改分组或统计含义时必须升级版本；历史报告保存统计、逐题证据和口径，不随新代码重算。
+注册表：`backend/lab/comparisons/metrics.py`，版本 `saved-checks-0.3.0`。修改分组或统计含义时必须升级版本；历史报告保存统计、逐题证据和口径，不随新代码重算。
 
 | 指标 | 原归档字段 |
 | --- | --- |

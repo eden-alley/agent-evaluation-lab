@@ -2,11 +2,13 @@
 
 本目录保存共创方法与外部分析 workflow 的源码和平台导入文件。
 
+当前产品方向见 [产品边界](../PRODUCT.md)：自动生成评测题已排除；通用 Harness 评测方法作为旧草稿保留，不是已校准 golden set 的生成入口。本次只更新目录说明，没有改动方法正文或平台包。
+
 | Skill | 方法版本 | 职责 |
 | --- | --- | --- |
 | [通用 Harness 评测](general-harness-evaluation/SKILL.md) | 0.1.5 草稿 | 从风险设计种子题和验收证据，补齐覆盖缺口并准备版本化基线 |
 | [结果判定与评分](agent-result-grading/SKILL.md) | 0.2.1 试用 | 内置 Judge 的判分路由、独立报告、证据引用和人工追加复核，与当前能力页同步 |
-| [Agent能力分析](agent-version-comparison-workflow/SKILL.md) | 0.9.0 离线试用 | 全量统计、按需讲解关键题，指标升降与关键过程；正式整批评测才可附整批开发建议；程序管理引用与提交 |
+| [Agent能力分析](agent-version-comparison-workflow/SKILL.md) | 0.10.1 离线试用 | 全量统计、按需讲解关键题，指标升降与关键过程；正式整批评测才可附整批开发建议；程序管理引用与提交 |
 
 方法的试用状态见各 Skill 正文。平台发布记录见 [Skill 同步记录](../docs/SKILL_SYNC.md)。
 

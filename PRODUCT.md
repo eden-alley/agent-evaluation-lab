@@ -1,19 +1,36 @@
-# Agent Evaluation Lab
+# 产品定位与当前边界
 
-## Current product direction
-The user works in an external Coding Agent. It consumes published built-in and business Skills on demand and produces datasets according to user needs. This inbound direction supersedes the old platform-launches-Codex design.
+更新：2026-11-17，依据本轮用户确认。当前实现与缺陷见 [项目现状与取舍](docs/PROJECT_REVIEW.md)，代码地图见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
-## Skill ownership
-Skills are first-class product knowledge. Their methodology must be co-designed with the user; do not author production Skill instructions independently. The built-in dataset-design record has metadata only and is not available as a published Skill. The platform implements user-authored versions, publication, discovery and artifact provenance.
+## 项目是什么
 
-## Delivered architecture
-Next.js/TypeScript + FastAPI + SQLite WAL; official MCP stdio bridge to the existing API. Shared strict contracts and services, no microservices or generic plugin runtime. Projects register the agent under test, not the external Coding Agent client.
+Agent Evaluation Lab 是面向 Agent 开发者的评测工作台：组织任务、受控执行、核对评分及证据，再比较两次实验的变化，帮助开发者决定下一步改什么。
 
-## Workflow
-User requirement → external Agent reads context and applicable published Skills → immutable dataset draft → external quality report + deterministic platform checks → human review → immutable dataset version. Dataset and Skill changes preserve earlier versions.
+主线：真实问题 → 固定任务与验收 → 运行与评分 → 查看证据与变化 → 人决定改进 → 后续评测验证。
+当前先服务本机 Windows / Python Harness；其他 Agent 的接入能力仍需验证。工作台不按建议自动修改 Harness。
 
-## Boundaries
-No paid model calls, Harness modifications, platform-launched Coding Agent, actual evaluation worker or autonomous improvement loop. Existing evaluation/Trace/comparison examples remain marked and separate from real storage. Skill origin declarations do not prove actual adherence. Approval tools are not exposed through MCP; local HTTP remains a single-user trusted interface.
+## 已确认的取舍
 
-## Visual authority
-Use the supplied Design System: neutral surfaces, compact tables, blue primary actions and clear evidence links. Functional UI is Chinese. Navigation now includes first-class built-in Skills, reflecting the user's updated requirements.
+- **排除自动生成评测题。** 候选来自成熟基准和真实使用案例，逐题核查质量。
+- 建立固定、人工核验的 golden set，用来判断被测 Agent 的基准能力；现有20题尚未达到这一定位。
+- 核心“任务 → 执行 → 评分 → 证据”应能独立运行，分析 Skill、A/B 对比及报告在其上组织。**这是目标，当前日常入口仍有前置耦合。**
+- 整体验收、各维度量化表现、未判定与异常状态分开设计。具体 rubric、尺度及聚合方式未定，不统一预设0/1或1—10。
+- 允许研究复用或替换自研模块；具体选型、迁移和删除决定尚未作出。
+- 先沿一道真实任务查清完整链路，再判断20题中的共性问题。
+
+golden set 的每题应说明代表能力与难点，具备可重建环境、与题面一致的验收、已知正确/错误产物的评分核查，以及版本和证据。工程题可以有多种正确实现。
+
+## 当前实现的边界
+
+当前已有外部 CLI 执行入口、题级进程和工作区、统一预算、原评分、归档、指标及报告展示；执行适配仍依赖本机冻结材料。近期并发/恢复/交付链的假 SDK 验证不等于真实模型能力验证。
+
+外部发起 Agent 接续解释关键题并提交报告。平台提供方法文本、记录版本、校验结构与引用，不独立证明分析者遵从、语义判断或建议正确。原任务评分和历史报告保留。
+自动生成题已移出方向；既有草案审批、Skill目录等代码仍存在，是否删除须核对依赖，不能把新方向写成已完成的裁剪。
+
+## 怎样保持项目可理解
+
+本轮文档的目的，是让所有者看清缺陷、理解代码和架构，并有依据决定保留、简化、复用或砍掉流程。
+重要改动先说明原因和作用位置，完成后用实际例子及证据解释变化，并同步现状文档。小修按影响缩减，不增加长报告或额外审批。
+
+已确认方向以本页为准；当前实现看 [架构](ARCHITECTURE.md)；问题与待证假设看 [现状诊断](docs/PROJECT_REVIEW.md)；未采用的建议看 [开源对标](docs/OPEN_SOURCE_REFERENCES.md)。
+[文档目录](docs/README.md)区分当前说明和历史资料。页面设计继续参照 [DESIGN.md](DESIGN.md)。

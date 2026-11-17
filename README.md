@@ -4,6 +4,12 @@
 
 **真实评测 → 指标对比 → 关键题与证据 → 开发决策 → 下一轮评测**
 
+## 先理解当前项目
+
+从 [项目现状与取舍](docs/PROJECT_REVIEW.md) 看题集、执行和评分的缺口，再读 [架构与代码地图](ARCHITECTURE.md)，沿 U05 找到启动、判分、归档和展示的代码。其他说明按需从 [文档目录](docs/README.md) 查阅。
+
+当前20题是已有任务与证据材料，尚不是经过校准的 golden set。产品已排除自动生成评测题；核心评测独立于分析 Skill 和报告是下一阶段方向，当前日常入口尚未解耦。已确认的边界见 [PRODUCT.md](PRODUCT.md)，开源参考尚未形成技术选型。
+
 ## Eval example：这批任务评出了什么
 
 **2026 年 11 月 12 日的正式 20 题复测：13 道通过、6 道失败、1 道无法判定。** 点进失败任务，能看到三种不同的问题：
@@ -20,7 +26,7 @@
 
 ## 用一张表，看清改善和退步
 
-下面是现有 20 道真实任务的两次运行对照。原任务整体完成从 **11/19 提升到 13/19**，代码独立回归从 **5/8 提升到 7/8**；与此同时，修改范围遵守从 **20/20 降到 16/20**。
+下面是这批 2026 年 11 月 12 日归档中的两次运行对照，不是当前全部版本的能力结论。原任务整体完成从 **11/19 提升到 13/19**，代码独立回归从 **5/8 提升到 7/8**；与此同时，修改范围遵守从 **20/20 降到 16/20**。
 
 ![真实20题归档的指标升降表：分别展示改善、退步、回归题和可比题数](docs/images/metric-changes.jpg)
 
@@ -60,6 +66,23 @@
 Agent 在外部 Harness 中执行真实任务，平台导入任务要求、工具轨迹、产物和原判定。程序负责全量统计与证据定位；外部 Agent 按随材料提供的轻量 Skill，解释退步、异常或支撑建议的关键题，再通过 MCP 或 CLI 一次提交报告。
 
 平台保存方法正文、版本和引用，检查材料是否对应，并将同一份任务讲解用于评测详情和对比页。原评分与历史报告保留，后续改动通过新的评测记录验证。
+
+### 发起评测后，在同一次任务里完成报告
+
+日常程序入口为 `scripts/evaluation.py`，复用原 Agent、工具、原评分与归档接口。启动前明确平台目的地、对照批次、模型/任务/预算及固定 Skill；缺少交付条件会先拒绝，不让题跑完后才发现无法生成对比。
+
+```powershell
+# 同步当前轻量方法，返回配置需固定的 workflow 三字段；旧版本和报告保留。
+.\.venv\Scripts\python.exe scripts/evaluation.py sync-skill --api-url <本批目的平台地址>
+# 以下start只接受明确标记的假API配置，并须使用隔离平台/数据目录。
+.\.venv\Scripts\python.exe scripts/evaluation.py start --config <验证配置.json> --out <新运行目录>
+# 发起者读取返回的Skill正文、指标、关键题原件，写好analysis.json后继续提交。
+.\.venv\Scripts\python.exe scripts/evaluation.py submit --run <原运行目录> --analysis <分析文件.json>
+```
+
+程序自动产出全量统计与固定材料；同一外部 Agent 接着分析退步、异常及建议依据中的关键题，真实提交并核对回执。`analysis_pending` 表示报告尚未交付；`delivery_complete` 且 `report_complete=true` 才表示报告收到。平台不启动另一个分析 Agent。中断后用 `continue --run <原运行目录>` 复用已有执行或收尾，不另开一批。
+
+正式多题批次要明确配置 `formal_batch`，超过3题才可附整批建议，允许零建议。首批没有对照时显式选择 `--baseline-only`，只保存基线、不声称升降。真实供应商执行需要新的冻结计划与当轮批准哈希，`start --config` 不构成真实模型调用授权。当前真实执行适配绑定本机冻结的formal20材料，迁移机器需显式提供并核验这些依赖。详见 [日常运行与交付](docs/REAL_RUN_DELIVERY.md)。
 
 此外，项目还提供 Agent 配置登记、数据集草案与版本确认、Skill 内容发布、archive/mock 复核记录，以及固定任务版本的保存交付物独立检查入口。具体范围见下方文档。
 
@@ -108,6 +131,11 @@ npm run build
 
 | 文档 | 内容 |
 | --- | --- |
+| [文档目录](docs/README.md) | 按“理解现状 → 架构 → 按需操作”阅读 |
+| [项目现状与取舍](docs/PROJECT_REVIEW.md) | 当前缺陷、模块依赖、已确认方向与未定事项 |
+| [架构与代码地图](ARCHITECTURE.md) | 用 U05 贯穿执行、原评分、证据和报告 |
+| [产品定位与边界](PRODUCT.md) | 产品目标及当前实现的差距 |
+| [开源实现参考](docs/OPEN_SOURCE_REFERENCES.md) | 对标机制、来源和适配限制，尚未选型 |
 | [真实评测示例](docs/EVAL_EXAMPLES.md) | 用 U02、U03、U05 的实际过程与结果介绍项目 |
 | [20 题任务材料](examples/eval/formal20/README.md) | 题面、初始输入、验收材料、准备命令及 Harness 接入要求 |
 | [外部运行导入](docs/EXTERNAL_RUN_IMPORT.md) | 真实归档、文件清单、哈希与读取接口 |
@@ -116,3 +144,4 @@ npm run build
 | [保存交付物的独立检查](docs/SAVED_DELIVERY_CHECKS.md) | 固定检查程序、历史记录及原评分的边界 |
 | [Judge 的依据与实现](docs/JUDGE_EVIDENCE.md) | archive/mock 复核、规则判定与人工追加复核 |
 | [Skill 文件与同步](skills/README.md) | 方法正文、导入包、发布状态和版本引用 |
+| [历史计划索引](docs/superpowers/plans/README.md) | 16份计划原文；不以计划代替完成证据 |
