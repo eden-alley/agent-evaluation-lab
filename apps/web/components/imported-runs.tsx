@@ -13,6 +13,8 @@ import { TraceNarrative } from "./trace-narrative";
 import { RunTaskProcess } from "./run-task-process";
 import { CurrentCapability } from "./current-capability";
 import { DeliveryRecheck } from "./delivery-recheck";
+import { OutputRecovery } from "./output-recovery";
+import { analysisStateText } from "../lib/comparisons";
 
 export function ImportedRuns({ id }: { id?: string }) {
   const [runs, setRuns] = useState<ImportedRun[]>([]),
@@ -168,6 +170,41 @@ function ImportedRunDetail({ run }: { run: ImportedRun }) {
           </a>
         }
       />
+      {!!run.comparisons?.length && (
+        <section
+          className="panel pad section-bottom"
+          aria-label="关联对比与报告"
+        >
+          <h2>关联对比与报告</h2>
+          <p className="small muted">
+            运行记录已导入；分析报告的交付状态分别列出。
+          </p>
+          {run.comparisons.map((comparison) => (
+            <div
+              className="row"
+              key={comparison.id}
+              style={{ marginTop: 12, flexWrap: "wrap" }}
+            >
+              <a
+                className="button small"
+                href={`/comparison?comparison=${encodeURIComponent(comparison.id)}`}
+              >
+                {comparison.name}
+              </a>
+              <span>
+                {comparison.statistics_state === "statistics_ready"
+                  ? "指标已保存 · "
+                  : ""}
+                {analysisStateText(comparison.analysis_state)}
+              </span>
+              <span className="small muted">
+                A：{comparison.baseline_run_id ?? "未记录"} → B：
+                {comparison.candidate_run_id ?? "等待新版"}
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
       {!item && (
         <div className="panel pad section-bottom">
           <div className="row" style={{ gap: 28, flexWrap: "wrap" }}>
@@ -344,6 +381,7 @@ function CaseResult({ run, item }: { run: ImportedRun; item: ImportedCase }) {
         active={tab}
         set={setTab}
       />
+      <OutputRecovery key={run.id + item.id} runId={run.id} caseId={item.id} />
       {tab === "本题结果" ? (
         <>
           <DeliveryRecheck key={run.id + item.id} run={run} item={item} />

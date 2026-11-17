@@ -15,6 +15,7 @@ def scoped(env, count):
     version = client.post(f'/api/v1/skills/{sid}/versions', json={
         'content': '---\nname: comparison\nmetadata:\n  version: 0.9.0\n---\nFormal batches may include evidence-backed advice.'}).json()
     assert client.post(f'/api/v1/skills/{sid}/versions/{version["id"]}/publish').status_code == 200
+    config['workflow'] = {'skill_id': sid, 'version_id': version['id'], 'content_hash': version['content_hash']}
     path = folder/'run.json'
     run = json.loads(path.read_text(encoding='utf-8'))
     original = run['cases'][0]

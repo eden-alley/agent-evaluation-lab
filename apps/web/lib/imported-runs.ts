@@ -1,3 +1,5 @@
+import type { AnalysisState } from "./comparisons";
+
 export const dimensions = [
   "结果质量",
   "交付完整性与可用性",
@@ -71,6 +73,17 @@ export interface ImportedRun {
   };
   cases: ImportedCase[];
   files: EvidenceFile[];
+  comparisons?: {
+    id: string;
+    name: string;
+    created_at: string;
+    sides: ("baseline" | "candidate")[];
+    baseline_run_id: string | null;
+    candidate_run_id: string | null;
+    analysis_state: AnalysisState;
+    statistics_state: "statistics_ready" | "legacy_unavailable";
+    latest_report_id: string | null;
+  }[];
 }
 export function dimensionLabel(value?: {
   P: number;

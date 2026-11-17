@@ -1,7 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Comparison } from "../lib/comparisons";
-import { demonstration, loadComparisonView } from "../lib/comparisons";
+import {
+  demonstration,
+  loadComparisonView,
+  analysisStateText,
+} from "../lib/comparisons";
 import { Header } from "./report-ui";
 import { ComparisonCreate } from "./comparison-create";
 import { ComparisonReportView } from "./comparison-report";
@@ -113,7 +117,15 @@ export function ComparisonWorkspace() {
               <div className={styles.row}>
                 <span>
                   逐题记录 {item.progress.received}/{item.progress.planned} ·{" "}
-                  {item.reports.length ? "已有对比报告" : "等待外部分析"}
+                  {item.statistics_state === "statistics_ready"
+                    ? "指标已保存 · "
+                    : ""}
+                  {analysisStateText(
+                    item.analysis_state ??
+                      (item.reports.length
+                        ? "report_received"
+                        : "analysis_pending"),
+                  )}
                 </span>
                 <button className="button" onClick={() => choose(item.id)}>
                   查看对比与开发建议

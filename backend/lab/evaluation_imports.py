@@ -52,7 +52,30 @@ def list_runs(request: Request, project_id: str | None = None):
 @router.get('/{run_id}')
 def get_run(run_id: str, request: Request):
     _, data = read_run(request, run_id)
-    return data
+    return {**data, 'comparisons': linked_comparisons(request, data['project_id'], run_id)}
+
+
+def linked_comparisons(request, project_id, run_id):
+    """List every explicitly linked comparison; a run has no implied unique baseline."""
+    from .comparisons import service
+    result = []
+    with connect(request.app.state.db_path) as conn:
+        rows = conn.execute('SELECT * FROM comparisons WHERE project_id=? ORDER BY created_at DESC,id DESC',
+                            (project_id,)).fetchall()
+        for row in rows:
+            snapshot = json.loads(row['snapshot'])
+            sides = [side for side in ('baseline', 'candidate')
+                     if (snapshot.get(side) or {}).get('run_id') == run_id]
+            if not sides:
+                continue
+            reports = service.report_summaries(conn, row['id'])
+            result.append({'id': row['id'], 'name': snapshot['name'], 'created_at': row['created_at'],
+                'sides': sides, 'baseline_run_id': snapshot['baseline'].get('run_id'),
+                'candidate_run_id': (snapshot.get('candidate') or {}).get('run_id'),
+                'analysis_state': 'report_received' if reports else 'analysis_pending',
+                'statistics_state': 'statistics_ready' if snapshot.get('metrics_snapshot') else 'legacy_unavailable',
+                'latest_report_id': reports[0]['id'] if reports else None})
+    return result
 
 
 def read_artifact(folder, path, max_bytes=None):
@@ -101,6 +124,20 @@ def get_explanation(run_id: str, case_id: str, request: Request):
     from .run_explanations import for_run
     with connect(request.app.state.db_path) as conn:
         return for_run(conn, folder, run_id, case_id)
+
+
+@router.get('/{run_id}/cases/{case_id}/output-recovery')
+def get_output_recovery(run_id: str, case_id: str, request: Request,
+                        expected_run_hash: str | None = None, expected_manifest_hash: str | None = None):
+    folder, run = read_run(request, run_id)
+    case = next((c for c in run.get('cases', []) if c['id'] == case_id), None)
+    if case is None:
+        raise QualityError('CASE_NOT_FOUND', '找不到该题。', 404)
+    for name, expected in [('run.json', expected_run_hash), ('manifest.json', expected_manifest_hash)]:
+        if expected is not None and hashlib.sha256((folder / name).read_bytes()).hexdigest() != expected:
+            raise QualityError('EVIDENCE_CHANGED', '归档已变化，不能用于这份已保存的比较。', 409)
+    from .output_recovery import summarize
+    return summarize(folder, case)
 
 
 @router.get('/{run_id}/artifact')

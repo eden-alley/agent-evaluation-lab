@@ -167,6 +167,21 @@ export function developmentAdvice(
     ? []
     : (report?.recommendations ?? []);
 }
+export type AnalysisState = "analysis_pending" | "report_received";
+export function analysisStateText(state?: AnalysisState): string {
+  return state === "report_received" ? "报告已收到" : "等待分析提交";
+}
+export function visibleMetricReport(
+  comparison: Pick<Comparison, "metric_report">,
+  report: ComparisonReport | null,
+  selectedReportId: string,
+): MetricReport | undefined {
+  return report
+    ? report.metric_report
+    : selectedReportId
+      ? undefined
+      : (comparison.metric_report ?? undefined);
+}
 export interface Comparison {
   id: string;
   name: string;
@@ -174,6 +189,18 @@ export interface Comparison {
   created_at: string;
   project_id: string;
   state: string;
+  analysis_state?: AnalysisState;
+  statistics_state?: "statistics_ready" | "legacy_unavailable";
+  metric_report?: MetricReport | null;
+  metrics_snapshot?: {
+    metric_report: Omit<MetricReport, "conditions">;
+    conditions: MetricReport["conditions"];
+    registry_version: string;
+    registry_hash: string;
+    process_version: string;
+    process_hash: string;
+    snapshot_hash: string;
+  } | null;
   is_simulation: boolean;
   analyst: Analyst;
   baseline: Source;
@@ -195,6 +222,7 @@ export interface Comparison {
   has_unreported_changes: boolean;
 }
 export interface CaseSide {
+  archive_binding?: { run_id: string; run_hash: string; manifest_hash: string } | null;
   case: {
     id: string;
     title: string;

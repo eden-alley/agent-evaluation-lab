@@ -18,6 +18,7 @@ def seven(env):
         'content': '---\nname: comparison\nmetadata:\n  version: 0.7.0\n---\nReview key cases and prioritize evidence-backed actions.',
         'change_note': 'key-case fixture'}).json()
     assert client.post(f'/api/v1/skills/{sid}/versions/{version["id"]}/publish').status_code == 200
+    config['workflow'] = {'skill_id': sid, 'version_id': version['id'], 'content_hash': version['content_hash']}
     candidate = folder.parent / 'candidate'
     shutil.copytree(folder, candidate)
     run = json.loads((candidate / 'run.json').read_text(encoding='utf-8'))

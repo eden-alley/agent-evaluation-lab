@@ -1,6 +1,8 @@
 """Versioned projections of saved checks. Never execute or replace a scorer."""
 import json
-from pathlib import PurePosixPath
+import hashlib
+from pathlib import Path, PurePosixPath
+from ..quality_checks import digest
 from .materials import number
 from .service import task_state
 from . import repetition
@@ -26,6 +28,30 @@ UNASSESSED = (
     ("conciseness", "简洁度与最小改动", "尚无已确认的评分分档；输出长度和代码行数不能直接替代质量判断。"),
     ("tool_strategy", "工具选择与调用策略", "本次只有调用及错误计数，尚未依据语义和任务需要逐次判断调用是否合理。"),
 )
+
+
+def conditions(snapshot):
+    result = []
+    for side in ("baseline", "candidate"):
+        source = snapshot.get(side)
+        entries = (source or {}).get("cases", {}).values()
+        caps = sorted({str(c["case"].get("task", {}).get("controls", {}).get("requests_per_case_cap"))
+                       for c in entries} - {"None"})
+        metadata = next((json.loads(m["content"]) for c in entries
+                         for m in c["materials"] if m["kind"] == "run_metadata"), None)
+        result.append({"side": side, "run_id": (source or {}).get("run_id"),
+                       "model": (source or {}).get("model"), "request_caps": caps, "run_metadata": metadata})
+    return result
+
+
+def freeze(snapshot):
+    """Persist both the result and its implementation identity exactly once at creation."""
+    fixed = {"metric_report": aggregate(snapshot), "conditions": conditions(snapshot),
+             "registry_version": VERSION,
+             "registry_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+             "process_version": repetition.VERSION,
+             "process_hash": hashlib.sha256(Path(repetition.__file__).read_bytes()).hexdigest()}
+    return {**fixed, "snapshot_hash": digest(fixed)}
 
 
 def direction(before, after, gains, losses):

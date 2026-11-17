@@ -93,6 +93,8 @@ def overview(row, snapshot, analyses, reports, verification):
             "analyst": snapshot["analyst"], "baseline": source(snapshot["baseline"]), "candidate": source(snapshot.get("candidate")),
             "is_simulation": snapshot["is_simulation"], **verification,
             "progress": p, "state": state,
+            "analysis_state": "report_received" if reports else "analysis_pending",
+            "statistics_state": "statistics_ready" if snapshot.get("metrics_snapshot") else "legacy_unavailable",
             "reports": [{"id": r["id"], "created_at": r["created_at"]} for r in reports],
             "has_unreported_changes": bool(reports and set(json.loads(reports[0]["case_report_ids"])) != {a["id"] for a in analyses.values()})}
 
@@ -113,7 +115,10 @@ def detail(conn, request, row, snapshot):
         queue.append({"case_id": cid, "title": case.get("title", cid), "task_state": task_state(snapshot, cid),
                       "analysis_id": current["id"] if current else None, "revision": current["revision"] if current else 0})
     latest = conn.execute("SELECT * FROM comparison_reports WHERE id=?", (reports[0]["id"],)).fetchone() if reports else None
+    fixed = snapshot.get("metrics_snapshot")
     return {**overview(row, snapshot, analyses, reports, verification), "queue": queue,
+            "metrics_snapshot": fixed,
+            "metric_report": {**fixed["metric_report"], "conditions": fixed["conditions"]} if fixed else None,
             "latest_report": report_object(latest, verification) if latest else None}
 
 
@@ -143,6 +148,8 @@ def create(conn, request, payload):
     snapshot = {**data, "baseline": baseline, "candidate": candidate, "workflow_content": version["content"],
                 "is_simulation": baseline["is_simulation"] or bool(candidate and candidate["is_simulation"])
                                  or payload.analyst.kind == "offline_fixture"}
+    from . import metrics
+    snapshot["metrics_snapshot"] = metrics.freeze(snapshot)
     identity = str(uuid.uuid4())
     conn.execute("INSERT INTO comparisons VALUES (?,?,?,?,?,?)",
                  (identity, baseline["project_id"], payload.request_id, digest(data), canonical(snapshot), now()))
@@ -161,6 +168,8 @@ def case_context(conn, request, identity, cid):
         if not case:
             return None
         return {**case, "is_simulation": source["is_simulation"],
+                "archive_binding": ({"run_id": source['run_id'], "run_hash": source['run_hash'],
+                                     "manifest_hash": source['manifest_hash']} if not source['is_simulation'] else None),
                 "materials": [{k: v for k, v in m.items() if k != "content"} for m in case["materials"]]}
     return {"case_id": cid, "task_state": task_state(snapshot, cid), **source_status(conn, identity),
             "baseline": side("baseline"), "candidate": side("candidate"),

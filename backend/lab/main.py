@@ -62,8 +62,11 @@ def create_app(db_path=None):
         with connect(path) as conn:
             mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
         return {"status": "ok", "database": "sqlite", "journal_mode": mode,
+                "storage": {"data_root": str(path.resolve().parent),
+                            "evaluation_runs_root": str((path.parent / 'evaluation-runs').resolve())},
                 "capabilities": {"projects": True, "agent_registration": True, "agent_check": True,
-                    "dataset_quality_handoff": True, "external_agent_tools": True, "skill_catalog": True, "evaluation_execution": False}}
+                    "dataset_quality_handoff": True, "external_agent_tools": True, "skill_catalog": True,
+                    "comparison_statistics_snapshot": True, "evaluation_execution": False}}
 
     app.include_router(projects.router)
     app.include_router(agents.router)

@@ -49,6 +49,13 @@ def test_invalid_requests_return_safe_json(client):
     assert client.post("/api/v1/projects", content="{").status_code == 422
 
 
+def test_health_reports_actual_archive_storage(client):
+    storage=client.get('/api/v1/health').json()['storage']
+    root=Path(client.app.state.db_path).resolve().parent
+    assert Path(storage['data_root']) == root
+    assert Path(storage['evaluation_runs_root']) == root / 'evaluation-runs'
+
+
 def test_agent_is_singleton_and_missing_is_reported(client, tmp_path):
     p = project(client)
     url = f"/api/v1/projects/{p['id']}/agent"

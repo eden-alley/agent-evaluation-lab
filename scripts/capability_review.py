@@ -15,7 +15,15 @@ from lab.comparisons.review_schemas import Analysis, ReviewSubmission
 
 
 class ReviewClientError(Exception):
-    pass
+    def __init__(self, message, *, status_code=None, response_body=None):
+        super().__init__(message)
+        self.status_code = status_code
+        self.response_body = response_body
+
+    @property
+    def definite_rejection(self):
+        # A timeout, malformed response or server failure may follow a commit.
+        return self.status_code is not None and 400 <= self.status_code < 500 and self.status_code != 408
 
 
 class Client:
@@ -43,8 +51,9 @@ class Client:
         except ValueError as exc:
             raise ReviewClientError(f"平台返回非 JSON（HTTP {response.status_code}）；提交状态待核对，不要另造提交编号。") from exc
         if not response.is_success:
-            error = body.get("error", body.get("detail", body))
-            raise ReviewClientError(f"HTTP {response.status_code}: {json.dumps(error, ensure_ascii=False)}")
+            error = body.get("error", body.get("detail", body)) if isinstance(body, dict) else body
+            raise ReviewClientError(f"HTTP {response.status_code}: {json.dumps(error, ensure_ascii=False)}",
+                                    status_code=response.status_code, response_body=body)
         return body
 
 
@@ -154,6 +163,103 @@ def material_summary(packet):
     return '\n'.join(lines) + '\n'
 
 
+def prepare_review_files(client, comparison_id, out, *, review_scope='focused', explain_case_ids=None):
+    """Persist one fixed preparation; never silently issue another delivery on resume."""
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    request = {'explain_case_ids': explain_case_ids, 'review_scope': review_scope}
+    request_path = out / 'preparation-request.json'
+    if request_path.exists() and json.loads(request_path.read_text(encoding='utf-8-sig')) != request:
+        raise ValueError('准备参数已固定；不能在同一交付目录更换用途或讲解题。')
+    packet_path = out / 'packet.json'
+    if packet_path.exists():
+        packet = json.loads(packet_path.read_text(encoding='utf-8-sig'))
+        if packet['comparison_id'] != comparison_id:
+            raise ValueError('已有材料属于另一份对比。')
+    else:
+        if (out / 'preparation-attempt.json').exists():
+            raise ReviewClientError('准备响应尚未确认。保留原请求；请找回原 packet，程序不会自动再次 prepare。')
+        save(request_path, request)
+        save(out / 'preparation-attempt.json', {'comparison_id': comparison_id, 'state': 'response_pending'})
+        packet = client.request('POST', '/comparisons/' + quote(comparison_id, safe='') + '/review-materials', json=request)
+        save(packet_path, packet)
+    save(out / 'materials.json', analyst_materials(packet))
+    method = packet['skill_delivery']
+    save(out / '方法提供记录.json', method)
+    (out / 'Skill正文.md').write_text(method['skill']['content'], encoding='utf-8')
+    for case in packet['metric_report']['cases']:
+        save(out / 'cases' / (quote(case['case_id'], safe='') + '.json'), case)
+    save(out / 'analysis-format.json', Analysis.model_json_schema())
+    if not (out / 'analysis.json').exists():
+        template = {'summary': '', 'recommendations': [], 'case_explanations': []}
+        if packet.get('review_policy', {}).get('recommendations_allowed') is False:
+            template.pop('recommendations')
+        save(out / 'analysis.json', template)
+    report_path = out / 'report.json'
+    report = json.loads(report_path.read_text(encoding='utf-8-sig')) if report_path.exists() else None
+    (out / '指标升降表.md').write_text(markdown(packet, report), encoding='utf-8')
+    (out / '材料摘要.md').write_text(material_summary(packet), encoding='utf-8')
+    return packet
+
+
+def submit_review_files(client, packet_path, analysis_path, *, origin='external_agent', frontend_url=None):
+    """Submit the original ReviewSubmission again after uncertainty, with fixed inputs."""
+    packet_path, analysis_path = Path(packet_path), Path(analysis_path)
+    out = packet_path.parent
+    packet = json.loads(packet_path.read_text(encoding='utf-8-sig'))
+    analysis = Analysis.model_validate_json(analysis_path.read_text(encoding='utf-8-sig'))
+    payload = ReviewSubmission.model_validate(submission(packet, analysis.model_dump(), origin)).model_dump()
+    request_path = out / 'request.json'
+    if request_path.exists():
+        original = json.loads(request_path.read_text(encoding='utf-8-sig'))
+        if original != payload:
+            raise ValueError('提交输入已固定；请保留原 analysis、packet 和 request，不能覆盖待确认请求。')
+        payload = original
+    else:
+        save(request_path, payload)
+    # The editable analysis file may later be corrected. Keep the actual submitted
+    # analysis beside the immutable request, including for pre-existing requests.
+    snapshot_path = out / 'submitted-analysis.json'
+    if not snapshot_path.exists():
+        save(snapshot_path, payload['analysis'])
+    elif json.loads(snapshot_path.read_text(encoding='utf-8-sig')) != payload['analysis']:
+        raise ValueError('保存的分析快照与原请求不一致。')
+    report_path = out / 'report.json'
+    if report_path.exists():
+        report = json.loads(report_path.read_text(encoding='utf-8-sig'))
+    else:
+        rejection_path = out / 'rejection.json'
+        if rejection_path.exists():
+            rejected = json.loads(rejection_path.read_text(encoding='utf-8-sig'))
+            if rejected['request_id'] != payload['request_id']:
+                raise ValueError('保存的拒绝记录与原请求不一致。')
+            raise ReviewClientError(rejected['message'], status_code=rejected['status_code'],
+                                    response_body=rejected['response_body'])
+        try:
+            report = client.request('POST', '/comparisons/' + quote(packet['comparison_id'], safe='') + '/review', json=payload)
+        except ReviewClientError as exc:
+            if exc.definite_rejection:
+                save(rejection_path, {'request_id': payload['request_id'], 'status_code': exc.status_code,
+                                     'response_body': exc.response_body, 'message': str(exc)})
+            raise
+        if report.get('request_id') != payload['request_id'] or not report.get('id') or not report.get('report_hash'):
+            raise ReviewClientError('报告响应与原请求不一致，保留文件等待核对。')
+        save(report_path, report)
+    if report.get('request_id') != payload['request_id'] or report.get('packet_hash') != payload['packet_hash']:
+        raise ValueError('保存的报告与原请求或材料不一致。')
+    receipt = {'comparison_id': packet['comparison_id'], 'report_id': report['id'], 'request_id': payload['request_id'],
+               'report_hash': report['report_hash'], 'source_state': report['source_state'],
+               'url': (frontend_url.rstrip('/') if frontend_url else '') + '/comparison?comparison=' + quote(packet['comparison_id'], safe='')}
+    if report.get('skill_delivery'):
+        receipt.update(delivery_id=report['skill_delivery']['id'], output_check_status=report['output_checks']['status'])
+    receipt_path = out / 'receipt.json'
+    if receipt_path.exists() and json.loads(receipt_path.read_text(encoding='utf-8-sig')) != receipt:
+        raise ValueError('保存的回执与报告不一致。')
+    save(receipt_path, receipt)
+    (out / '指标升降表.md').write_text(markdown(packet, report), encoding='utf-8')
+    return report, receipt
+
+
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--api-url")
@@ -178,23 +284,8 @@ def main(argv=None):
     try:
         client = Client(args.api_url)
         if args.command == "prepare":
-            base = "/comparisons/" + quote(args.comparison_id, safe="")
-            packet = client.request("POST", base + "/review-materials", json={"explain_case_ids": args.explain_case_ids, 'review_scope': args.scope})
-            save(args.out / "packet.json", packet)
-            save(args.out / "materials.json", analyst_materials(packet))
-            method = packet["skill_delivery"]
-            save(args.out / "方法提供记录.json", method)
-            (args.out / "Skill正文.md").write_text(method["skill"]["content"], encoding="utf-8")
-            for case in packet["metric_report"]["cases"]:
-                save(args.out / "cases" / (quote(case["case_id"], safe="") + ".json"), case)
-            save(args.out / "analysis-format.json", Analysis.model_json_schema())
-            template = {"summary": "", "recommendations": [], "case_explanations": []}
-            if packet.get('review_policy', {}).get('recommendations_allowed') is False:
-                template.pop('recommendations')
-            if not (args.out / "analysis.json").exists():
-                save(args.out / "analysis.json", template)
-            (args.out / "指标升降表.md").write_text(markdown(packet), encoding="utf-8")
-            (args.out / "材料摘要.md").write_text(material_summary(packet), encoding="utf-8")
+            prepare_review_files(client, args.comparison_id, args.out,
+                                 review_scope=args.scope, explain_case_ids=args.explain_case_ids)
             print(json.dumps({"packet": str(args.out / "packet.json"), "analysis": str(args.out / "analysis.json"),
                               "model_calls": 0, "evaluation_runs": 0}, ensure_ascii=False))
         elif args.command == "files":
@@ -206,19 +297,8 @@ def main(argv=None):
                 params={"case_id": args.case, "side": args.side, "path": args.path, "start_line": args.start, "line_count": args.lines})
             print(json.dumps(data, ensure_ascii=False, indent=2))
         else:
-            packet = json.loads(args.packet.read_text(encoding="utf-8-sig"))
-            analysis = Analysis.model_validate_json(args.analysis.read_text(encoding="utf-8-sig"))
-            payload = ReviewSubmission.model_validate(submission(packet, analysis.model_dump(), args.origin)).model_dump()
-            save(args.packet.parent / "request.json", payload)
-            report = client.request("POST", "/comparisons/" + quote(packet["comparison_id"], safe="") + "/review", json=payload)
-            save(args.packet.parent / "report.json", report)
-            receipt = {"comparison_id": packet["comparison_id"], "report_id": report["id"], "request_id": payload["request_id"],
-                       "report_hash": report["report_hash"], "source_state": report["source_state"],
-                       "url": "http://127.0.0.1:3100/comparison?comparison=" + quote(packet["comparison_id"], safe="")}
-            if report.get("skill_delivery"):
-                receipt.update(delivery_id=report["skill_delivery"]["id"], output_check_status=report["output_checks"]["status"])
-            save(args.packet.parent / "receipt.json", receipt)
-            (args.packet.parent / "指标升降表.md").write_text(markdown(packet, report), encoding="utf-8")
+            _, receipt = submit_review_files(client, args.packet, args.analysis, origin=args.origin,
+                                             frontend_url='http://127.0.0.1:3100')
             print(json.dumps(receipt, ensure_ascii=False))
         return 0
     except (ReviewClientError, OSError, ValueError, KeyError) as exc:

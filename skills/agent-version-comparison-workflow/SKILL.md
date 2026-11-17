@@ -1,14 +1,22 @@
 ---
 name: agent-version-comparison-workflow
-description: 分析已有 Agent 评测归档，解释指标变化和关键任务过程；正式整批评测时可附有证据、可验证的开发建议。程序负责统计、材料和提交。适用于版本对比或基线诊断，不运行评测或重新评分。
+description: 适用于已有 Agent 评测归档的版本对比或基线诊断，以及外部 Agent 已获授权发起评测后，在同一任务继续完成能力分析和报告提交。
 metadata:
-  version: 0.9.0
+  version: 0.10.1
   status: 轻量离线试用；模型分析质量未校准
 ---
 
 # Agent 能力分析
 
 程序产出完整指标升降表；你只讲清需要关注的关键题。两三道题的小范围验证只看指标和关键过程；正式多题评测才可附整批开发建议。没有可靠建议时不凑建议，也不用解释原因。保持“看到变化—查清过程—决定是否改进—后续评测验证”的闭环，不增加新的审批或分析流程。
+
+## 执行后的接续
+
+若你是发起本次已获授权评测的同一外部 Agent，执行结束后就在同一任务继续读固定 Skill、分析和提交。使用日常入口时，以 `python scripts/evaluation.py continue --run <运行目录>` 读取原状态和材料位置；读取其中的 `Skill正文.md`、`材料摘要.md`、`materials.json` 及按需原件，填写 `analysis.json` 后调用 `python scripts/evaluation.py submit --run <运行目录> --analysis <分析文件>`。入口、配置与已有归档用法见 [程序接口](references/platform-protocol.md)。
+
+`analysis_pending` 只表示材料已备好。不要在此提前结束或只把材料交给用户，也不要求用户另找一个分析 Agent。程序不启动平台内 Agent 或外部模型。拿到同一材料包对应的 `report.json` 和 `receipt.json`，日常入口状态达到 `delivery_complete`，才可宣布报告交付完成；阻塞时明确停在哪一步。
+
+本 Skill 的分析阶段不授予新增评测授权。已有执行授权后的分析与提交直接接续；只有分析已有归档的请求仍只做分析，不据此启动模型、重跑评测、修改代码或改原评分。缺少明确基线或固定 workflow 时报告缺项，不暗选。日常入口显式只建基线时，`task_complete=true`、`report_complete=false` 表示基线已保存；说明未做 A/B 分析，不能报告升降或分析报告已完成。
 
 ## 读取与判断
 
@@ -52,9 +60,11 @@ metadata:
 
 讲解仍使用既有字段，不新增报告类型：`case_id`、`focus`（`baseline` / `candidate` / `comparison`）、`background`、`stages`、`result`、`limitations`。`result.text` 第一段放一句结论，后续段落写最终验收；页面把结论放在开头，验收放在经过之后。背景可用段落、行内代码和代码块。阶段包含 `title`、`text`、`evidence`，结果也须附证据。引用填写 `side`、目录中的 `path`、`event_id` 或 `check_id`；普通文本可填行范围。不要自行填哈希、节选或提供记录。
 
-MCP：`prepare_capability_review` → 按需 `list_capability_materials` / `read_capability_material` → 同一连接 `submit_capability_review`。CLI：`scripts/capability_review.py` 的 `prepare`、`files`、`read`、`submit`；填写材料目录中的 `analysis.json`。MCP准备参数为 `review_scope`，CLI为 `prepare --scope focused` / `--scope formal_batch`，以程序返回的实际用途为准。程序管理全量统计、固定引用、版本、修订和提交。未收到回执就保留同一材料包与分析重试，不另造提交编号。
+日常评测使用上面的 `evaluation.py submit`，让程序同时保存报告、回执与交付状态。仅分析已有归档时，MCP：`prepare_capability_review` → 按需 `list_capability_materials` / `read_capability_material` → 同一连接 `submit_capability_review`；CLI：`scripts/capability_review.py` 的 `prepare`、`files`、`read`、`submit`。填写材料目录中的 `analysis.json`。MCP准备参数为 `review_scope`，CLI为 `prepare --scope focused` / `--scope formal_batch`，以程序返回的实际用途为准。程序管理全量统计、固定引用、版本、修订和提交。
 
-程序记录“正文已提供”并检查字段和引用，不证明分析者已阅读、模型遵循或解释正确。分析不授权改代码、调用新模型、重跑评测或改评分。
+超时或响应未知时，保留原材料、分析和请求，用相同输入取回同一回执。日常入口记录服务器明确拒收后，另存修正分析，再用同一 `--run` 调用 `submit --analysis <修正文件>`；程序保留失败尝试并关联新提交，成功后原任务接回有效回执。不要覆盖失败文件或自行另造成功记录。`continue` 返回的材料位置可能指向本任务的后续提交目录，以返回路径为准。
+
+程序记录“正文已提供”并检查字段和引用，不证明分析者已阅读、模型遵循或解释正确。
 
 ## 专项判据与参考边界
 

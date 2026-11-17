@@ -14,6 +14,8 @@ import {
   createEvidenceVerifier,
   reviewScopeFor,
   developmentAdvice,
+  visibleMetricReport,
+  analysisStateText,
 } from "../lib/comparisons";
 import type { ReviewScope } from "../lib/skill-delivery";
 import { Tabs } from "./report-ui";
@@ -107,6 +109,7 @@ export function ComparisonReportView({
     caseFirst =
       tab === "逐题对比" && Boolean(report?.explanation_coverage?.provided);
   const advice = developmentAdvice(report);
+  const metricReport = visibleMetricReport(comparison, report, reportId);
   useEffect(() => {
     setReviewScope(report?.review_policy?.mode ?? "focused");
   }, [report?.id]);
@@ -170,9 +173,9 @@ export function ComparisonReportView({
   const sourceInformation = (
     <>
       <section
-        className={`${styles.intro} ${report?.metric_report ? styles.compactIntro : ""}`}
+        className={`${styles.intro} ${metricReport ? styles.compactIntro : ""}`}
       >
-        {!report?.metric_report && (
+        {!metricReport && (
           <h2>
             {!comparison.candidate
               ? "等待新版运行"
@@ -187,16 +190,16 @@ export function ComparisonReportView({
           {report?.summary ??
             (reportId
               ? "正在读取所选报告…"
-              : "材料已经固定。把分析指令交给外部Agent，完成一道题即可保存一道记录；平台不会在后台启动模型。")}
+              : `${metricReport ? "材料与机器统计已经固定" : "材料已经固定"}，等待外部分析提交。提供Skill只表示分析材料已提供；平台不会在后台启动模型。`)}
         </p>
         <p className={styles.muted}>
           {report?.analysis_origin?.kind === "offline_program"
             ? `${comparison.is_simulation ? "包含模拟材料" : "真实归档"} · 程序统计，分析正文由离线整理提供 · 本次未调用模型、未重跑评测。`
             : "单题单次对照只支持本题本次表现；记录收齐与证据充分分别展示。"}
         </p>
-        {report?.metric_report && (
+        {metricReport && (
           <p className={styles.muted}>
-            {report.metric_report.conditions
+            {metricReport.conditions
               .map(
                 (c) =>
                   `${c.side === "baseline" ? "A" : "B"} 请求上限 ${c.request_caps.join("、") || "未记录"}`,
@@ -217,11 +220,11 @@ export function ComparisonReportView({
       )}
       <details className={styles.sourceDetails}>
         <summary>
-          {report?.metric_report
-            ? `来源与报告版本 · ${p.received}题归档 · ${report.metric_report.coverage.unassessed}个能力方向未评估`
+          {metricReport
+            ? `来源与${report ? "报告" : "统计"}版本 · ${p.planned}题归档 · ${metricReport.coverage.unassessed}个能力方向未评估`
             : `来源、覆盖与报告版本 · ${p.received}/${p.planned}题已收到 · ${p.unknown}项证据不足 · ${p.not_covered}项未覆盖`}
         </summary>
-        {report?.metric_report && (
+        {metricReport && (
           <>
             <p>{comparison.objective}</p>
             <p>
@@ -329,22 +332,32 @@ export function ComparisonReportView({
       <div className={styles.topline}>
         <div>
           <h1>{comparison.name}</h1>
-          {!report?.metric_report && (
+          {!metricReport && (
             <p className={styles.muted}>{comparison.objective}</p>
           )}
         </div>
-        {!report?.metric_report && (
+        {!metricReport && (
           <button className="button small" onClick={() => void copy()}>
             {copied ? "分析指令已复制" : "复制外部分析指令"}
           </button>
         )}
       </div>
-      {report?.metric_report && (
+      {!reportId && !report && (
+        <p className={styles.notice} role="status">
+          {metricReport ? "机器统计已保存 · " : ""}
+          {analysisStateText(comparison.analysis_state)}。
+          分析提交并取得报告回执后，才显示为报告交付完成。
+        </p>
+      )}
+      {metricReport && (
         <p className={styles.contextLine}>
           {comparison.is_simulation ? "包含模拟材料" : "真实归档"} ·{" "}
-          {report.review_policy && `${report.review_policy.label} · `}
-          {reviewCoverageText(report.explanation_coverage, p.planned)}。
-          {report.metric_report.conditions
+          {report?.review_policy && `${report.review_policy.label} · `}
+          {report
+            ? reviewCoverageText(report.explanation_coverage, p.planned)
+            : "等待分析提交"}
+          。
+          {metricReport.conditions
             .map(
               (c) =>
                 `${c.side === "baseline" ? "A" : "B"}请求上限${c.request_caps.join("、") || "未记录"}`,
@@ -358,13 +371,13 @@ export function ComparisonReportView({
           <strong>离线模拟验证 · 不代表实测能力变化</strong>
           <p>
             {comparison.candidate?.is_simulation
-              ? "A来自已有归档；B是假设修复完成的模拟情景，没有执行新版Agent、模型或测试。"
+              ? "本次包含模拟材料。哪些动作实际执行、哪些是假设情景，请查看逐题过程和报告来源；不用于真实模型能力结论。"
               : "本报告包含模拟来源或离线脚本分析。"}{" "}
             本次验证的是读取、提交和展示链路。
           </p>
         </div>
       )}
-      {(!report?.metric_report || verification.source_state === "changed") && (
+      {(!metricReport || verification.source_state === "changed") && (
         <details
           className={styles.sourceDetails}
           open={verification.source_state === "changed" ? true : undefined}
@@ -403,7 +416,7 @@ export function ComparisonReportView({
           已有较新的逐题记录，当前汇总仍引用发布时的旧版本。
         </p>
       )}
-      {!report?.metric_report && !caseFirst && sourceInformation}
+      {!metricReport && !caseFirst && sourceInformation}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -433,10 +446,10 @@ export function ComparisonReportView({
                   className={styles.developmentSummary}
                 />
               )}
-              {report?.metric_report && (
+              {metricReport && (
                 <ComparisonMetrics
-                  key={report.id}
-                  report={report.metric_report}
+                  key={report?.id ?? comparison.id}
+                  report={metricReport}
                   openCase={openCase}
                 />
               )}
@@ -460,7 +473,7 @@ export function ComparisonReportView({
                   </div>
                 </section>
               )}
-              {!report?.metric_report && (
+              {!metricReport && (
                 <section className={styles.section}>
                   <h2>本次题目</h2>
                   <div className={styles.list}>
@@ -627,7 +640,7 @@ export function ComparisonReportView({
           ) : (
             <section className={styles.intro}>
               <h2>来源与判断边界</h2>
-              {report?.metric_report && sourceInformation}
+              {metricReport && sourceInformation}
               {report && (
                 <ReviewMethod
                   delivery={report.skill_delivery}
@@ -641,9 +654,7 @@ export function ComparisonReportView({
               <dl>
                 <dt>对比编号</dt>
                 <dd className={styles.path}>{comparison.id}</dd>
-                <dt>
-                  {report?.metric_report ? "分析Skill版本" : "Workflow版本"}
-                </dt>
+                <dt>{metricReport ? "分析Skill版本" : "Workflow版本"}</dt>
                 <dd className={styles.path}>
                   {report?.workflow?.version_id ??
                     comparison.workflow.version_id}

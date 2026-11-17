@@ -15,6 +15,7 @@ import {
 } from "../lib/comparisons";
 import styles from "./comparison-workspace.module.css";
 import { TaskNarrative } from "./task-narrative";
+import { OutputRecovery } from "./output-recovery";
 
 export function OutcomeTag({ outcome }: { outcome: Observation["outcome"] }) {
   return (
@@ -178,6 +179,11 @@ export function ComparisonCaseView({
           <p>两边任务缺失或内容不同，本题不直接判定能力升降。</p>
         )}
       </section>
+      {(["baseline", "candidate"] as const).map((side) => {
+        const binding = data[side]?.archive_binding;
+        return binding && <OutputRecovery key={side + caseId} runId={binding.run_id} caseId={caseId}
+          binding={binding} label={`${side === "baseline" ? "A" : "B"} · 输出与恢复`} />;
+      })}
       {explanation ? (
         <section className={styles.section} aria-label="任务过程讲解">
           <TaskNarrative
@@ -205,7 +211,7 @@ export function ComparisonCaseView({
       <section className={styles.section}>
         <h2>原始指标对照</h2>
         <p className={styles.muted}>
-          数值来自归档的题级指标；差值只描述这次资源变化，不自动代表能力提高。B为模拟时，其数值也是假设。
+          数值来自归档的题级指标；差值只描述这次资源变化，不自动代表能力提高。模拟材料的数值只用于对应验证场景。
         </p>
         <div className={styles.table}>
           <table className={styles.facts}>

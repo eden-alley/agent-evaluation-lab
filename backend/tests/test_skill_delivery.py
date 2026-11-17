@@ -26,6 +26,7 @@ def publish_six(client, config):
         'content': '---\nname: comparison\nmetadata:\n  version: 0.6.0\n---\nExplain every selected case and prioritize evidence-backed actions.',
         'change_note': 'v0.6 fixture'}).json()
     assert client.post(f'/api/v1/skills/{sid}/versions/{version["id"]}/publish').status_code == 200
+    config['workflow'] = {'skill_id': sid, 'version_id': version['id'], 'content_hash': version['content_hash']}
 
 
 def test_six_defaults_to_all_cases_and_preserves_priority_reason(comparison_env):
